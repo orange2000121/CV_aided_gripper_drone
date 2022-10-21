@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    tools:context=".VideoFeederClass">
+
+    <com.dji.sdk.sample.internal.utils.VideoFeedView
+        android:id="@+id/fpv_video_feed"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+    <com.dji.sdk.sample.internal.utils.VideoFeedView
+        android:id="@+id/primary_video_feed"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="750dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/fpv_video_feed"
+        app:layout_constraintTop_toTopOf="parent">
+
+
+        <Button
+            android:id="@+id/btn_capture"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:text="Capture"
+            android:textColor="#795548"
+            android:textSize="12sp" />
+
+
+        <ToggleButton
+            android:id="@+id/btn_down"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:checked="false"
+            android:text="Start Record"
+            android:textColor="#795548"
+            android:textOff="Start Record"
+            android:textOn="Stop Record"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_enable_virtual_stick"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:text="E VS"
+            android:textColor="#795548" />
+
+        <Button
+            android:id="@+id/btn_disable_virtual_stick"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:text="D VS"
+            android:textColor="#795548" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
