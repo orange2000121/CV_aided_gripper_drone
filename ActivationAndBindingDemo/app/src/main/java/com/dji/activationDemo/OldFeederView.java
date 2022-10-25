@@ -22,6 +22,7 @@ import org.opencv.imgproc.Imgproc;
 
 import static com.dji.activationDemo.ToastUtils.showToast;
 
+import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
 import androidx.annotation.NonNull;
@@ -330,7 +331,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         ArucoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TwoDAruco(arucotranslationvector[0],arucotranslationvector[1],0,arucoyaw);
+                TwoDAruco(arucotranslationvector[0],arucotranslationvector[2],0,arucoyaw);
             }
         });
 
@@ -908,7 +909,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         }, (long) durationms);
     }
 
-    public void TwoDAruco(double x, double y, double z, double yaw) {
+    public void TwoDAruco(double right_left, double front_back, double up_down, double yaw) {
         flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
@@ -919,23 +920,23 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         });
 
-        flightController.setVerticalControlMode(VerticalControlMode.POSITION);
+        flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
         flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
         flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
-        double constanttranslationalspeed = 0.5; // m/s
 
-        float distance = (float) sqrt((arucotranslationvector[0]) * (arucotranslationvector[0]) + (arucotranslationvector[1]) * (arucotranslationvector[1]) + (arucotranslationvector[2]) * (arucotranslationvector[2]));
-        double flighttime = distance / constanttranslationalspeed;
+        float distance = (float) sqrt(right_left*right_left + front_back*front_back);
 
-
-        roll = (float) x;            //forward +  backwards -   MAX 15 From 8, overshoot
-        throttle = (float) z;       //up +    down -    MAX 4 From 3, overshoot
-        pitch = (float) (y * .98);    //right +    left -     MAX = 15    From 8, starts to overshoot
-
-        if (flighttime > 10) {
-            return;
+        float higher_speed = (float) max(right_left,front_back);
+        roll = (float) front_back/higher_speed;            //forward +  backwards -   MAX 15 From 8, overshoot
+        throttle = (float) up_down/higher_speed;       //up +    down -    MAX 4 From 3, overshoot
+        pitch = (float) right_left/higher_speed;    //right +    left -     MAX = 15    From 8, starts to overshoot
+        double flying_time =(double) distance /sqrt(roll*roll + pitch*pitch);
+        Log.i("flying",String.format("x: %f, y: %f, z: %ff",right_left,front_back,up_down));
+        Log.i("flying",String.format("forward: %f, horizontal: %f, up: %f, fly time: %f",roll,pitch,throttle,flying_time));
+        if (flying_time > 10) {
+            setzero();
         } else {
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
@@ -944,7 +945,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                     setzero();
                     showToast("going");
                 }
-            }, (long) flighttime);
+            }, (long) flying_time*1000);
         }
     }
     public void SetUp(int speed, int delayms) {
