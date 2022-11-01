@@ -651,7 +651,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         parameters.set_cornerRefinementMethod(1);
         parameters.set_cornerRefinementWinSize(12);
         dictionary = Aruco.getPredefinedDictionary(Aruco.DICT_6X6_50); //MARKER NUMBER 23
-        BitmapFromFeedersSurface = mVideoSurface.getBitmap();
+//        BitmapFromFeedersSurface = mVideoSurface.getBitmap();
+        BitmapFromFeedersSurface = Bitmap.createScaledBitmap(mVideoSurface.getBitmap(),picwidth,picheight, true);
         RGBmatFromBitmap = new Mat();
 
         Utils.bitmapToMat(BitmapFromFeedersSurface, droneImage);
@@ -939,7 +940,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         float higher_speed = (float) max(abs(right_left_gap),abs(front_back_gap));
 
         if(abs(right_left_gap) <0.1 && abs(front_back_gap)<0.1) return; //if the distance is too small, don't move
-        if(higher_speed<1){
+        if(higher_speed > 1){
             roll = (float) front_back_gap/higher_speed;     //forward +  backwards -   MAX 15 From 8, overshoot
             throttle = (float) up_down_gap/higher_speed;    //up      +  down      -   MAX 4 From 3, overshoot
             pitch = (float) right_left_gap/higher_speed;    //right   +  left      -   MAX = 15    From 8, starts to overshoot
@@ -954,8 +955,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         roll /= 2;
         throttle /= 2;
         pitch /= 2;
-
         double flying_time = distance /sqrt(roll*roll + pitch*pitch);
+        showToast(String.format("roll: %.2f, pitch: %.2f, throttle: %.2f, fly time: %.2f", roll, pitch, throttle, flying_time));
         Log.i("flying",String.format("x: %f, y: %f, z: %ff",right_left_gap,front_back_gap,up_down_gap));
         Log.i("flying",String.format("forward: %f, horizontal: %f, up: %f, fly time: %f",roll,pitch,throttle,flying_time));
         if (flying_time > 10) {
@@ -966,8 +967,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 @Override
                 public void run() {
                     setZero();
-//                    if(emg_now) return;
-//                    TwoDAruco(arucotranslationvector[0], arucotranslationvector[2], 0, arucoyaw);
+                    if(emg_now) return;
+                    TwoDAruco(arucotranslationvector[0], arucotranslationvector[2], 0, arucoyaw);
                 }
             }, (long) flying_time*1000);
         }
