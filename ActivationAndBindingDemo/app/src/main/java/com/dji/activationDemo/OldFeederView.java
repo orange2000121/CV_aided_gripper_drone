@@ -22,6 +22,7 @@ import org.opencv.imgproc.Imgproc;
 
 import static com.dji.activationDemo.ToastUtils.showToast;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
@@ -82,11 +83,12 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     private FlightController flightController= null;
     private FlightAssistant flightAssistant = null;
     private Button TurnOnMotorsBtn,TurnOffMotorsBtn, TakeOffBtn, LandBtn,DisableVirtualStick,EnableVirtualStick,ArucoBtn;
-    private Button EmergencyBtn,ForwardBtn, YawBtn,BackwardsBtn, RightBtn ,LeftBtn,UpBtn, DownBtn, Moveto;
+    private Button EmergencyBtn,ForwardBtn, YawBtn,BackwardsBtn, RightBtn ,LeftBtn,UpBtn, DownBtn, MoveTo;
     private OnScreenJoystick screenJoystickRight,screenJoystickLeft;
     private Timer mSendVirtualStickDataTimer;
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
     private Compass compass;
+    private boolean emg_now = false;
 //--------Camera
     private Button mCaptureBtn;
 
@@ -101,10 +103,10 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 //--------
     ArrayList<Float> allx = new ArrayList<>();
     ArrayList<Float> ally = new ArrayList<>();
-    ArrayList<Float> allz = new ArrayList<>();
-    ArrayList<Float> allroll = new ArrayList<>();
-    ArrayList<Float> allpitch = new ArrayList<>();
-    ArrayList<Float> allyaw = new ArrayList<>();
+    ArrayList<Float> all_z = new ArrayList<>();
+    ArrayList<Float> all_roll = new ArrayList<>();
+    ArrayList<Float> all_pitch = new ArrayList<>();
+    ArrayList<Float> all_yaw = new ArrayList<>();
     float avgx=0,avgy=0,avgz=0,globalavgx=0,globalavgy=0,globalavgz=0;
     double pX = 0, pY = 0;
     private float pitch = 0;
@@ -175,7 +177,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         initUI();
         initParams();
         dronestart();
-        //intitFlightvar();
         FlightController flightController = ModuleVerificationUtil.getFlightController();
         if (flightController == null) {
             return;
@@ -232,8 +233,14 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         EmergencyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setzero();
+                emg_now = !emg_now;
+                setZero();
                 saveImageToExternalStorage(BitmapFromFeedersSurface);
+                if(emg_now){
+                    showToast("Emergency");
+                }else {
+                    showToast("dismiss the alert");
+                }
             }
         });
         ForwardBtn.setOnClickListener(new View.OnClickListener() {
@@ -245,7 +252,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        setzero();
+                        setZero();
                         showToast("forward");
                     }
                 }, (long) 2000);
@@ -260,7 +267,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        setzero();
+                        setZero();
                         showToast("Backward");
                     }
                 },(long) 2000 );
@@ -275,7 +282,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        setzero();
+                        setZero();
                         showToast("Right");
                     }
                 },(long) 2000 );
@@ -291,7 +298,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        setzero();
+                        setZero();
                         showToast("LEft ---");
                     }
                 },(long) 2000 );
@@ -306,7 +313,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        setzero();
+                        setZero();
                         showToast("Up ");
                     }
                 },(long) 2000 );
@@ -321,7 +328,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        setzero();
+                        setZero();
                         showToast("Down -");
                     }
                 },(long) 2000 );
@@ -331,29 +338,27 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         ArucoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                emg_now = false;
                 TwoDAruco(arucotranslationvector[0],arucotranslationvector[2],0,arucoyaw);
             }
         });
 
-        Moveto.setOnClickListener(new View.OnClickListener() {
+        MoveTo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ThreeDDisplacementXYZyawTIME(1,1,0,0,2000);
+                threeDDisplacementXYZYawTIME(1,1,0,0,2000);
             }
         });
 
         EnableVirtualStick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        flightController.setVirtualStickAdvancedModeEnabled(true);
-                        if (djiError != null) {
-                            ToastUtils.setResultToToast(djiError.getDescription());
-                        } else {
-                            showToast("VS Enabled");
-                        }
+                flightController.setVirtualStickModeEnabled(true, djiError -> {
+                    flightController.setVirtualStickAdvancedModeEnabled(true);
+                    if (djiError != null) {
+                        ToastUtils.setResultToToast(djiError.getDescription());
+                    } else {
+                        showToast("VS Enabled");
                     }
                 });
             }
@@ -361,15 +366,12 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         DisableVirtualStick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                flightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        flightController.setVirtualStickAdvancedModeEnabled(true);
-                        if (djiError != null) {
-                            ToastUtils.setResultToToast(djiError.getDescription());
-                        } else {
-                            showToast("VS Disabled");
-                        }
+                flightController.setVirtualStickModeEnabled(false, djiError -> {
+                    flightController.setVirtualStickAdvancedModeEnabled(true);
+                    if (djiError != null) {
+                        ToastUtils.setResultToToast(djiError.getDescription());
+                    } else {
+                        showToast("VS Disabled");
                     }
                 });
             }
@@ -469,13 +471,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
     }
 
-    public void intitFlightvar(){
-        pitch = 0 ;
-        roll = 0 ;
-        yaw=0;
-        throttle=0;
-    }
-
     public void saveImageToExternalStorage(Bitmap finalBitmap) {
         //Bitmap resized = null;
         //resized = Bitmap.createScaledBitmap(finalBitmap,1280,960, true);
@@ -527,7 +522,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         LeftBtn = findViewById(R.id.btn_left);
         RightBtn = findViewById(R.id.btn_right);
         YawBtn = findViewById(R.id.btn_yaw);
-        Moveto = findViewById(R.id.btn_move_to);
+        MoveTo = findViewById(R.id.btn_move_to);
         ArucoBtn = findViewById(R.id.btn_aruco);
         EnableVirtualStick = findViewById(R.id.btn_enable_virtual_stick);
         DisableVirtualStick = findViewById(R.id.btn_disable_virtual_stick);
@@ -815,39 +810,39 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             //arraylists to hold values
             allx.add(xarucofloat);
             ally.add(yarucofloat);
-            allz.add(zarucofloat);
-            allyaw.add(yawarucofloat);
+            all_z.add(zarucofloat);
+            all_yaw.add(yawarucofloat);
 
             int checksize = 5;
 
-            if (allz.size()==checksize) {//checksize = 5 but therer are actually 6 elements in the arrays
+            if (all_z.size()==checksize) {//checksize = 5 but therer are actually 6 elements in the arrays
 
                 float sumx = 0, sumy = 0, sumz = 0, sumyaw = 0, meanx = 0, meany = 0, meanz = 0, meanyaw = 0;
 
                 for (int j = 0; j < checksize; j++) {
 
-                    que = allyaw.get(j);
-                    sumz += allz.get(j);
+                    que = all_yaw.get(j);
+                    sumz += all_z.get(j);
                     sumy += ally.get(j);
                     sumx += allx.get(j);
-                    sumyaw += allyaw.get(j);
+                    sumyaw += all_yaw.get(j);
                 }
                 meanx = sumx / allx.size();
                 meany = sumy / ally.size();
-                meanz = sumz / allz.size();
-                meanyaw = sumyaw / allyaw.size();
+                meanz = sumz / all_z.size();
+                meanyaw = sumyaw / all_yaw.size();
 
                 //Taking error out of the y-axis
                 double fixy = meany - (meanz * 7.4 / 100);
                 meany = (float) fixy;
-                int yawhowmany = allyaw.size();
+                int yawhowmany = all_yaw.size();
 
                 //showToast(" cuanto: " +sumyaw+" cauntas: " +yawhowmany+" X: " + String.format("%.4f", (meanx)) + "   Y: " + String.format("%.4f", (meany)) + "   Z: " + String.format("%.4f", (meanz)) + "  Yaw:" + String.format("%.4f", (yawarucofloat)));
 
                 allx.clear();
                 ally.clear();
-                allz.clear();
-                allyaw.clear();
+                all_z.clear();
+                all_yaw.clear();
 
             }
 
@@ -871,21 +866,38 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             theTextView6.setTextColor(Color.BLUE);
 
         }
-
+        else{
+            TextView theTextView1 = (TextView) findViewById(R.id.textView1);
+            TextView theTextView2 = (TextView) findViewById(R.id.textView2);
+            TextView theTextView3 = (TextView) findViewById(R.id.textView3);
+            TextView theTextView4 = (TextView) findViewById(R.id.textView4);
+            TextView theTextView5 = (TextView) findViewById(R.id.textView5);
+            TextView theTextView6 = (TextView) findViewById(R.id.textView6);
+            theTextView1.setText("X: null");
+            theTextView2.setText("Y: null");
+            theTextView3.setText("Z: null");
+            theTextView4.setText("Yaw: null");
+            theTextView5.setText("Roll: null");
+            theTextView6.setText("Pitch: null");
+            theTextView1.setTextColor(Color.BLUE);
+            theTextView2.setTextColor(Color.BLUE);
+            theTextView3.setTextColor(Color.BLUE);
+            theTextView4.setTextColor(Color.BLUE);
+            theTextView5.setTextColor(Color.BLUE);
+            theTextView6.setTextColor(Color.BLUE);
+            emg_now = true;
+        }
         Bitmap DisplayBitmap = Bitmap.createBitmap(RGBmatFromBitmap.cols(),RGBmatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(RGBmatFromBitmap, DisplayBitmap);
         mImageSurface.setImageBitmap(null);
         mImageSurface.setImageBitmap(DisplayBitmap);
     }
 
-    public void ThreeDDisplacementXYZyawTIME(double x, double y, double z, double yaw, int durationms){
-        flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                flightController.setVirtualStickAdvancedModeEnabled(true);
-                if (djiError != null) {
-                    ToastUtils.setResultToToast(djiError.getDescription());
-                }
+    public void threeDDisplacementXYZYawTIME(double x, double y, double z, double yaw, int duration_ms){
+        flightController.setVirtualStickModeEnabled(true, djiError -> {
+            flightController.setVirtualStickAdvancedModeEnabled(true);
+            if (djiError != null) {
+                ToastUtils.setResultToToast(djiError.getDescription());
             }
         });
 
@@ -903,58 +915,72 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                setzero();
+                setZero();
                 showToast("going");
             }
-        }, (long) durationms);
+        }, (long) duration_ms);
     }
 
-    public void TwoDAruco(double right_left, double front_back, double up_down, double yaw) {
-        flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                flightController.setVirtualStickAdvancedModeEnabled(true);
-                if (djiError != null) {
-                    ToastUtils.setResultToToast(djiError.getDescription());
-                }
+    public void TwoDAruco(double right_left_gap, double front_back_gap, double up_down_gap, double yaw) {
+        showToast("going");
+        flightController.setVirtualStickModeEnabled(true, djiError -> {
+            flightController.setVirtualStickAdvancedModeEnabled(true);
+            if (djiError != null) {
+                ToastUtils.setResultToToast(djiError.getDescription());
             }
         });
-
         flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
         flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
         flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
+        front_back_gap -= 1; //1 meter in front of aruco
+        double distance = sqrt(right_left_gap*right_left_gap + front_back_gap*front_back_gap);
+        float higher_speed = (float) max(abs(right_left_gap),abs(front_back_gap));
 
-        float distance = (float) sqrt(right_left*right_left + front_back*front_back);
+        if(abs(right_left_gap) <0.1 && abs(front_back_gap)<0.1) return; //if the distance is too small, don't move
+        if(higher_speed<1){
+            roll = (float) front_back_gap/higher_speed;     //forward +  backwards -   MAX 15 From 8, overshoot
+            throttle = (float) up_down_gap/higher_speed;    //up      +  down      -   MAX 4 From 3, overshoot
+            pitch = (float) right_left_gap/higher_speed;    //right   +  left      -   MAX = 15    From 8, starts to overshoot
+        }else{
+            float basic_speed = 1;
+            roll =  basic_speed *(float) front_back_gap;
+            throttle = basic_speed *(float) up_down_gap;
+            pitch = basic_speed *(float) right_left_gap;
+        }
 
-        float higher_speed = (float) max(right_left,front_back);
-        roll = (float) front_back/higher_speed;            //forward +  backwards -   MAX 15 From 8, overshoot
-        throttle = (float) up_down/higher_speed;       //up +    down -    MAX 4 From 3, overshoot
-        pitch = (float) right_left/higher_speed;    //right +    left -     MAX = 15    From 8, starts to overshoot
-        double flying_time =(double) distance /sqrt(roll*roll + pitch*pitch);
-        Log.i("flying",String.format("x: %f, y: %f, z: %ff",right_left,front_back,up_down));
+        //reduce speed
+        roll /= 2;
+        throttle /= 2;
+        pitch /= 2;
+
+        double flying_time = distance /sqrt(roll*roll + pitch*pitch);
+        Log.i("flying",String.format("x: %f, y: %f, z: %ff",right_left_gap,front_back_gap,up_down_gap));
         Log.i("flying",String.format("forward: %f, horizontal: %f, up: %f, fly time: %f",roll,pitch,throttle,flying_time));
         if (flying_time > 10) {
-            setzero();
+            setZero();
         } else {
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    setzero();
-                    showToast("going");
+                    setZero();
+//                    if(emg_now) return;
+//                    TwoDAruco(arucotranslationvector[0], arucotranslationvector[2], 0, arucoyaw);
                 }
             }, (long) flying_time*1000);
         }
     }
+
+
     public void SetUp(int speed, int delayms) {
         throttle = (float) (speed);
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                setzero();
+                setZero();
                 showToast("Up");
             }
         }, (long) delayms);
@@ -965,68 +991,68 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                setzero();
+                setZero();
                 showToast("Down");
             }
         }, (long) delayms);
     }
-    public void SetYaw(int angspeed, int delayms) {
-        yaw = (float) (angspeed);
+    public void SetYaw(int ang_speed, int delay_ms) {
+        yaw = (float) (ang_speed);
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                setzero();
+                setZero();
                 showToast("+ Yaw");
             }
-        }, (long) delayms);
+        }, (long) delay_ms);
     }
-    public void SetForward(int speed, int delayms) {
+    public void SetForward(int speed, int delay_ms) {
         roll = (float) (speed);
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                setzero();
+                setZero();
                 showToast("Forward");
             }
-        },(long) delayms );
+        },(long) delay_ms );
     }
-    public void SetBackward(int speed, int delayms) {
+    public void SetBackward(int speed, int delay_ms) {
         roll = (float) (-speed);
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                setzero();
+                setZero();
                 showToast("Backward");
             }
-        },(long) delayms );
+        },(long) delay_ms );
     }
-    public void SetRight(int speed, int delayms) {
+    public void SetRight(int speed, int delay_ms) {
         pitch = (float) (speed);
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                setzero();
+                setZero();
                 showToast("Right");
             }
-        },(long) delayms );
+        },(long) delay_ms );
     }
-    public void SetLeft(int speed, int delayms) {
+    public void SetLeft(int speed, int delay_ms) {
         pitch = (float) (-speed);
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                setzero();
+                setZero();
                 showToast("Left");
             }
-        },(long) delayms );
+        },(long) delay_ms );
     }
 
-    public void setzero(){
+    public void setZero(){
         pitch = (float)0.0;
         roll = (float) 0.0;
         throttle = (float)0.0;
