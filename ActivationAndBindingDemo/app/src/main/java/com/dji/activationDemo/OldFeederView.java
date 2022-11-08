@@ -51,6 +51,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Timer;
@@ -96,10 +98,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     protected TextureView mVideoSurface = null;
     protected ImageView mImageSurface;
     private Bitmap sourceBitmap, BitmapFromFeedersSurface;
-    private Mat RGBmatFromBitmap;
-    private MatOfInt ids;
-    private Dictionary dictionary;
-    private DetectorParameters parameters;
+//--------Aruco variables
+    private final ArrayList<Point3> aruco_coordinate_buffer = new ArrayList<>(Collections.nCopies(10, null));
+    private double[] aruco_coordinates = {0,0,0};
 //--------
     ArrayList<Float> allx = new ArrayList<>();
     ArrayList<Float> ally = new ArrayList<>();
@@ -107,6 +108,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     ArrayList<Float> all_roll = new ArrayList<>();
     ArrayList<Float> all_pitch = new ArrayList<>();
     ArrayList<Float> all_yaw = new ArrayList<>();
+    //Todo : 刪除無用變數
     float avgx=0,avgy=0,avgz=0,globalavgx=0,globalavgy=0,globalavgz=0;
     double pX = 0, pY = 0;
     private float pitch = 0;
@@ -131,7 +133,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     double que2;
     double que3;
     double que;
-    double[] arucotranslationvector;
     float pitchJoyControlMaxSpeed = 10;
     float rollJoyControlMaxSpeed = 10;
     float verticalJoyControlMaxSpeed = 2;
@@ -193,6 +194,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 }
             }
         };
+        /****************************************************************************/
+        /***************************   Button Function   ****************************/
+        /****************************************************************************/
         mCaptureBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -339,7 +343,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             @Override
             public void onClick(View v) {
                 emg_now = false;
-                TwoDAruco(arucotranslationvector[0],arucotranslationvector[2],0,arucoyaw);
+                TwoDAruco(aruco_coordinates[0], aruco_coordinates[2],0,arucoyaw);
             }
         });
 
@@ -610,50 +614,53 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
-        ArucoDetector();
-
+        aruco_coordinates = ArucoDetector();
+        showArucoCoordinates();
     }
 
+    private void showArucoCoordinates(){
+        if(aruco_coordinates == null){
+            showToast("No Aruco detected");
+            Log.w(TAG, "No Aruco detected");
+            return;
+        }
+        // Todo : make show screen text tool
+        TextView theTextView1 = (TextView) findViewById(R.id.textView1);
+        TextView theTextView2 = (TextView) findViewById(R.id.textView2);
+        TextView theTextView3 = (TextView) findViewById(R.id.textView3);
+        TextView theTextView4 = (TextView) findViewById(R.id.textView4);
+        TextView theTextView5 = (TextView) findViewById(R.id.textView5);
+        TextView theTextView6 = (TextView) findViewById(R.id.textView6);
+        theTextView1.setText("X: " + String.format("%.4f", aruco_coordinates[0])  + " ,  ");
+        theTextView2.setText("Y: " + String.format("%.4f", aruco_coordinates[1])  + " ,  ");
+        theTextView3.setText("Z: " + String.format("%.4f", aruco_coordinates[2])  + " ,  ");
+        theTextView4.setText("Yaw: " + String.format("%.4f", arucoyaw)  + " ,  ");
+        theTextView5.setText("Roll: " + String.format("%.4f", arucoroll)  + " ,  ");
+        theTextView6.setText("Pitch: " + String.format("%.4f", arucopitch)  + " ,  ");
+        theTextView1.setTextColor(Color.BLUE);
+        theTextView2.setTextColor(Color.BLUE);
+        theTextView3.setTextColor(Color.BLUE);
+        theTextView4.setTextColor(Color.BLUE);
+        theTextView5.setTextColor(Color.BLUE);
+        theTextView6.setTextColor(Color.BLUE);
+    }
 
-    private void ArucoDetector() {
-
-        /*if (ModuleVerificationUtil.isFlightControllerAvailable()) {
-            FlightController flightController =
-                    ((Aircraft) DemoApplication.getProductInstance()).getFlightController();
-
-
-            flightController.setStateCallback(new FlightControllerState.Callback() {
-                @Override
-                public void onUpdate(@NonNull FlightControllerState djiFlightControllerCurrentState) {
-                    if (null != compass) {
-                        String description =
-                                "CalibrationStatus: " + compass.getCalibrationState() + "\n"
-                                        + "Heading: " + compass.getHeading() + "\n"
-                                        + "isCalibrating: " + compass.isCalibrating() + "\n";
-                        showToast(description);
-                    }
-                }
-            });
-            if (ModuleVerificationUtil.isCompassAvailable()) {
-                compass = flightController.getCompass();
-            }
-        }*/
-
-        int picwidth = 1280;
-        int picheight = 960;
+    private double[] ArucoDetector() {
+        int pic_width = 1280;
+        int pic_height = 960;
+        double[] aruco_translation_vector = {0,0,0};
         float MarkerSizeinm = (float) 0.201;
-        List<Mat> corners = new ArrayList();
+        List<Mat> corners = new ArrayList<>();
         corners.clear();
         Mat droneImage = new Mat();
         Mat grayImage = new Mat();
-        ids = new MatOfInt();
-        parameters = DetectorParameters.create();
+        MatOfInt ids = new MatOfInt();
+        DetectorParameters parameters = DetectorParameters.create();
         parameters.set_cornerRefinementMethod(1);
         parameters.set_cornerRefinementWinSize(12);
-        dictionary = Aruco.getPredefinedDictionary(Aruco.DICT_6X6_50); //MARKER NUMBER 23
-//        BitmapFromFeedersSurface = mVideoSurface.getBitmap();
-        BitmapFromFeedersSurface = Bitmap.createScaledBitmap(mVideoSurface.getBitmap(),picwidth,picheight, true);
-        RGBmatFromBitmap = new Mat();
+        Dictionary dictionary = Aruco.getPredefinedDictionary(Aruco.DICT_6X6_50); //MARKER NUMBER 23
+        BitmapFromFeedersSurface = Bitmap.createScaledBitmap(mVideoSurface.getBitmap(),pic_width,pic_height, true);
+        Mat RGBmatFromBitmap = new Mat();
 
         Utils.bitmapToMat(BitmapFromFeedersSurface, droneImage);
         Imgproc.cvtColor(droneImage, grayImage, Imgproc.COLOR_BGR2GRAY);
@@ -663,15 +670,15 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         if(corners.size()>0){
             //Draw lines at center of the image
             //Vertical line
-            Point  startverlin = new Point(picwidth/2, 0);
-            Point  endverlin = new Point(picwidth/2, picheight);
+            Point  startverlin = new Point(pic_width/2, 0);
+            Point  endverlin = new Point(pic_width/2, pic_height);
             Scalar colorlin = new Scalar(255, 0, 0);
             int thickness = 3;
             Imgproc.line(RGBmatFromBitmap, startverlin, endverlin, colorlin, thickness);
 
             //Horizontal line
-            Point starthorlin = new Point(0, picheight/2);
-            Point endhorlin = new Point(picwidth, picheight/2);
+            Point starthorlin = new Point(0, pic_height/2);
+            Point endhorlin = new Point(pic_width, pic_height/2);
             Imgproc.line(RGBmatFromBitmap, starthorlin, endhorlin, colorlin, thickness);
 
             Mat rvecs = new Mat();
@@ -702,8 +709,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             MatOfPoint3f objPoints = new MatOfPoint3f(new Point3(-MarkerSizeinm/2, MarkerSizeinm/2, 0), new Point3(MarkerSizeinm/2, MarkerSizeinm/2, 0),
                     new Point3(-MarkerSizeinm/2, -MarkerSizeinm/2, 0),new Point3(MarkerSizeinm/2, -MarkerSizeinm/2, 0));
 
-//Pose Estimation
-
+            //Pose Estimation
             Aruco.drawDetectedMarkers(RGBmatFromBitmap, corners, ids);
 
             //Corners values with format (y,x)
@@ -726,11 +732,10 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             MatOfPoint3f mcorners = new MatOfPoint3f();
             mcorners.fromList(corners4);
 
-            for(int i = 0;i<ids.toArray().length;i++){
-
+            for(int i = 0; i< ids.toArray().length; i++){
                 Aruco.drawAxis(RGBmatFromBitmap, cameraMatrix, distCoeffs, rvecs.row(i), tvecs.row(i), 0.13f);
-                Mat arucorotationmat = new Mat(3,3,6);
-                Calib3d.Rodrigues (rvecs.row(i), arucorotationmat);
+                Mat aruco_rotation_vec = new Mat(3,3,6);
+                Calib3d.Rodrigues (rvecs.row(i), aruco_rotation_vec);
                 Mat cameraMatrixAruco = new Mat();
                 Mat rotMatrixAru = new Mat();
                 Mat transVectAru = new Mat();
@@ -741,24 +746,24 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 Mat projMatrix22 = new Mat();
                 Mat RT = Mat.zeros(3,4,CvType.CV_64F);
 
-                RT.put(0,0,arucorotationmat.get(0,0)[0]);
-                RT.put(0,1,arucorotationmat.get(0,0)[0]);
-                RT.put(0,2,arucorotationmat.get(0,2)[0]);
-                RT.put(0,3, tvecs.get(i,0)[0]);
-                RT.put(1,0,arucorotationmat.get(1,0)[0]);
-                RT.put(1,1,arucorotationmat.get(1,1)[0]);
-                RT.put(1,2,arucorotationmat.get(1,2)[0]);
-                RT.put(1,3, tvecs.get(i,0)[1]);
-                RT.put(2,0,arucorotationmat.get(2,0)[0]);
-                RT.put(2,1,arucorotationmat.get(2,1)[0]);
-                RT.put(2,2,arucorotationmat.get(2,2)[0]);
+                RT.put(0,0,aruco_rotation_vec.get(0,0)[0]);
+                RT.put(0,1,aruco_rotation_vec.get(0,0)[0]);
+                RT.put(0,2,aruco_rotation_vec.get(0,2)[0]);
+                RT.put(0,3,tvecs.get(i,0)[0]);
+                RT.put(1,0,aruco_rotation_vec.get(1,0)[0]);
+                RT.put(1,1,aruco_rotation_vec.get(1,1)[0]);
+                RT.put(1,2,aruco_rotation_vec.get(1,2)[0]);
+                RT.put(1,3,tvecs.get(i,0)[1]);
+                RT.put(2,0,aruco_rotation_vec.get(2,0)[0]);
+                RT.put(2,1,aruco_rotation_vec.get(2,1)[0]);
+                RT.put(2,2,aruco_rotation_vec.get(2,2)[0]);
                 RT.put(2,3,tvecs.get(i,0)[2]);
 
                 Core.gemm(cameraMatrix, RT,  1,new Mat(),0,projMatrix22,0);
 
                 Calib3d.decomposeProjectionMatrix(projMatrix22,cameraMatrixAruco,rotMatrixAru,transVectAru,rotMatrixX22,rotMatrixY22,rotMatrixZ22,ArucoeulerAngles);
 
-                arucotranslationvector = tvecs.get(i,0); //for debugging, printing on screen
+                aruco_translation_vector = tvecs.get(i,0); //for debugging, printing on screen
                 arucoroll = ArucoeulerAngles.get(0,0)[0];  //for debugging, printing on screen
                 arucopitch = ArucoeulerAngles.get(1,0)[0];
                 arucoyaw = -ArucoeulerAngles.get(2,0)[0];// change sign to get the rotation needed by the drone not the paper
@@ -794,11 +799,11 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 projected.release();
             }
 
-
+            // Todo : 刪除 double to float
             //doubles to float to make things faster
-            zarucofloat= (float) arucotranslationvector[2]; //the zero value is the z axis through the camera
-            yarucofloat = (float) arucotranslationvector[1] ;
-            xarucofloat = (float) arucotranslationvector[0]; //the zero value is the x axis, side to side of the camera
+            zarucofloat= (float) aruco_translation_vector[2]; //the zero value is the z axis through the camera
+            yarucofloat = (float) aruco_translation_vector[1] ;
+            xarucofloat = (float) aruco_translation_vector[0]; //the zero value is the x axis, side to side of the camera
             yawarucofloat = (float) arucoyaw;
 
             //Turn negatives angles into positives
@@ -847,53 +852,47 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
             }
 
-            TextView theTextView1 = (TextView) findViewById(R.id.textView1);
-            TextView theTextView2 = (TextView) findViewById(R.id.textView2);
-            TextView theTextView3 = (TextView) findViewById(R.id.textView3);
-            TextView theTextView4 = (TextView) findViewById(R.id.textView4);
-            TextView theTextView5 = (TextView) findViewById(R.id.textView5);
-            TextView theTextView6 = (TextView) findViewById(R.id.textView6);
-            theTextView1.setText("X: " + String.format("%.4f", arucotranslationvector[0])  + " ,  ");
-            theTextView2.setText("Y: " + String.format("%.4f", arucotranslationvector[1])  + " ,  ");
-            theTextView3.setText("Z: " + String.format("%.4f", arucotranslationvector[2])  + " ,  ");
-            theTextView4.setText("Yaw: " + String.format("%.4f", arucoyaw)  + " ,  ");
-            theTextView5.setText("Roll: " + String.format("%.4f", arucoroll)  + " ,  ");
-            theTextView6.setText("Pitch: " + String.format("%.4f", arucopitch)  + " ,  ");
-            theTextView1.setTextColor(Color.BLUE);
-            theTextView2.setTextColor(Color.BLUE);
-            theTextView3.setTextColor(Color.BLUE);
-            theTextView4.setTextColor(Color.BLUE);
-            theTextView5.setTextColor(Color.BLUE);
-            theTextView6.setTextColor(Color.BLUE);
+            aruco_coordinate_buffer.remove(0);
+            aruco_coordinate_buffer.add(new Point3(aruco_translation_vector[0], aruco_translation_vector[1], aruco_translation_vector[2]));
 
         }
         else{
-            TextView theTextView1 = (TextView) findViewById(R.id.textView1);
-            TextView theTextView2 = (TextView) findViewById(R.id.textView2);
-            TextView theTextView3 = (TextView) findViewById(R.id.textView3);
-            TextView theTextView4 = (TextView) findViewById(R.id.textView4);
-            TextView theTextView5 = (TextView) findViewById(R.id.textView5);
-            TextView theTextView6 = (TextView) findViewById(R.id.textView6);
-            theTextView1.setText("X: null");
-            theTextView2.setText("Y: null");
-            theTextView3.setText("Z: null");
-            theTextView4.setText("Yaw: null");
-            theTextView5.setText("Roll: null");
-            theTextView6.setText("Pitch: null");
-            theTextView1.setTextColor(Color.BLUE);
-            theTextView2.setTextColor(Color.BLUE);
-            theTextView3.setTextColor(Color.BLUE);
-            theTextView4.setTextColor(Color.BLUE);
-            theTextView5.setTextColor(Color.BLUE);
-            theTextView6.setTextColor(Color.BLUE);
-            emg_now = true;
+            aruco_coordinate_buffer.remove(0);
+            aruco_coordinate_buffer.add(null);
         }
-        Bitmap DisplayBitmap = Bitmap.createBitmap(RGBmatFromBitmap.cols(),RGBmatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
+        //todo : get the median of the aruco_coordinate_buffer
+        List<Double> x_list =new ArrayList<Double>(), y_list = new ArrayList<Double>(), z_list = new ArrayList<Double>();
+        for (int i = 0; i < aruco_coordinate_buffer.size(); i++) {
+            if (aruco_coordinate_buffer.get(i) != null) {
+                x_list.add(aruco_coordinate_buffer.get(i).x);
+                y_list.add(aruco_coordinate_buffer.get(i).y);
+                z_list.add(aruco_coordinate_buffer.get(i).z);
+            }
+        }
+        // Draw the detected marker on the image
+        Bitmap DisplayBitmap = Bitmap.createBitmap(RGBmatFromBitmap.cols(), RGBmatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(RGBmatFromBitmap, DisplayBitmap);
         mImageSurface.setImageBitmap(null);
         mImageSurface.setImageBitmap(DisplayBitmap);
-    }
 
+        if (x_list.size() > 0) {
+            return new double[]{median(x_list), median(y_list), median(z_list)};
+        }else {
+            emg_now = true;
+            return null;
+        }
+
+    }
+    private static Double median(List<Double> values) {
+        Collections.sort(values);
+        if (values.size() % 2 == 1)
+            return values.get((values.size() + 1) / 2 - 1);
+        else {
+            Double lower = values.get(values.size() / 2 - 1);
+            Double upper = values.get(values.size() / 2);
+            return (lower + upper) / 2.0;
+        }
+    }
     public void threeDDisplacementXYZYawTIME(double x, double y, double z, double yaw, int duration_ms){
         flightController.setVirtualStickModeEnabled(true, djiError -> {
             flightController.setVirtualStickAdvancedModeEnabled(true);
@@ -968,13 +967,13 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 public void run() {
                     setZero();
                     if(emg_now) return;
-                    TwoDAruco(arucotranslationvector[0], arucotranslationvector[2], 0, arucoyaw);
+                    TwoDAruco(aruco_coordinates[0], aruco_coordinates[2], 0, arucoyaw);
                 }
             }, (long) flying_time*1000);
         }
     }
 
-
+    //Todo : remove unused functions
     public void SetUp(int speed, int delayms) {
         throttle = (float) (speed);
         Handler handler = new Handler();
@@ -986,6 +985,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         }, (long) delayms);
     }
+    //Todo : remove unused functions
     public void SetDown(int speed, int delayms) {
         throttle = (float) (speed);
         Handler handler = new Handler();
@@ -997,6 +997,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         }, (long) delayms);
     }
+    //Todo : 移動到呼叫的地方
     public void SetYaw(int ang_speed, int delay_ms) {
         yaw = (float) (ang_speed);
         Handler handler = new Handler();
@@ -1008,6 +1009,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         }, (long) delay_ms);
     }
+    //Todo : remove unused functions
     public void SetForward(int speed, int delay_ms) {
         roll = (float) (speed);
         Handler handler = new Handler();
@@ -1019,6 +1021,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         },(long) delay_ms );
     }
+    //Todo : remove unused functions
     public void SetBackward(int speed, int delay_ms) {
         roll = (float) (-speed);
         Handler handler = new Handler();
@@ -1030,6 +1033,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         },(long) delay_ms );
     }
+    //Todo : remove unused functions
     public void SetRight(int speed, int delay_ms) {
         pitch = (float) (speed);
         Handler handler = new Handler();
@@ -1041,6 +1045,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         },(long) delay_ms );
     }
+    //Todo : remove unused functions
     public void SetLeft(int speed, int delay_ms) {
         pitch = (float) (-speed);
         Handler handler = new Handler();
@@ -1062,6 +1067,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
     }
 
+    //Todo : remove unused functions
     public void ObjectDetection(int t){
 
     }
