@@ -987,28 +987,48 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 @Override
                 public void run() {
                     setZero();
-//                    if(emg_now) return;
-//                    TwoDAruco(arucotranslationvector[0], arucotranslationvector[2], 0, arucoyaw);
-                    showToast("primer trip");
-                     back_first_fly_time = first_fly_time;
-                     back_pitch = pitch;
-                     back_roll=roll;
-                     //back_throttle;
-                     //back_yaw;
-                }
+                    if(emg_now) return;
+                    showToast("first trip");
+                    GoForwardSequence();
+                    }
             }, (long) first_fly_time);
-
-
         }
     }
 
-    public void FirstSequence() {
-
-        TwoDAruco(arucotranslationvector[0],arucotranslationvector[2],0,arucoyaw);
-
-
-
+    public void GoForwardSequence() {
+        roll=1;
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setZero();
+                GoUpSequence();
+            }
+        }, (long) 1);
     }
+    public void GoUpSequence() {
+        throttle=1;
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setZero();
+                GoBackSequence();
+            }
+        }, (long) 1);
+    }
+    public void GoBackSequence() {
+        ReturnMock();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setZero();
+                showToast("Wellcome Home");
+            }
+        }, (long) 1);
+    }
+
     public void ReturnMock(float xx, float yy, int tt){
         pitch=-xx;
         roll=-yy;
