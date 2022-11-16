@@ -346,11 +346,13 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             @Override
             public void onClick(View v) {
 
+                //GoBackUpValues
+
+
                 emg_now = false;
-                //TwoDAruco(arucotranslationvector[0],arucotranslationvector[2],0,arucoyaw);
-                //TwoDAruco(1.8,2.5,0,25);
-                ReturnMock((float)1.8/3,(float)(2.5-1)/3, 3000);
-                //ReturntoOrigin();
+                TwoDAruco(arucotranslationvector[0],arucotranslationvector[2],0,arucoyaw);
+                showToast("0 "+arucotranslationvector[0]+"  1 "+arucotranslationvector[1]+"  2 "+arucotranslationvector[2]);
+
 
             }
         });
@@ -935,7 +937,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     }
 
     public void TwoDAruco(double right_left_gap, double front_back_gap, double up_down_gap, double yaw) {
-        showToast("going");
         flightController.setVirtualStickModeEnabled(true, djiError -> {
             flightController.setVirtualStickAdvancedModeEnabled(true);
             if (djiError != null) {
@@ -947,17 +948,33 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
+
+
+        double front_back_gap_goback = front_back_gap;
         front_back_gap -= 1; //1 meter in front of aruco
+
         //up_down_gap -=1;
+
+        //Getting distance for first approach (1m stand off)
         double distance = sqrt(right_left_gap*right_left_gap + front_back_gap*front_back_gap);
         float higher_speed = (float) max(abs(right_left_gap),abs(front_back_gap));
 
-        if(abs(right_left_gap) <0.1 && abs(front_back_gap)<0.1) {
+        //Getting GoBack parametters
+        double distance_goback = sqrt(right_left_gap*right_left_gap + front_back_gap_goback*front_back_gap_goback);
+        float higher_speed_goback = (float) max(abs(right_left_gap),abs(front_back_gap_goback));
+        double roll_goback = front_back_gap_goback / (higher_speed_goback*2);
+        double pitch_goback = right_left_gap / (higher_speed_goback*2);
+        double flying_time_goback = distance_goback / sqrt(roll_goback*roll_goback + pitch_goback*pitch_goback);
+        back_first_fly_time = flying_time_goback*1000;
+        back_pitch= pitch_goback;
+        back_roll= roll_goback;
+        showToast(String.format("xxxx: %f, yyyyy: %f",back_roll,back_pitch));
+        back_throttle= 0;
 
+        if(abs(right_left_gap) <0.1 && abs(front_back_gap)<0.1) {
 
         } //if the distance is too small, don't move
         if(higher_speed>1){
-
             roll = (float) front_back_gap/higher_speed;     //forward +  backwards -   MAX 15 From 8, overshoot
             throttle = (float) up_down_gap/higher_speed;    //up      +  down      -   MAX 4 From 3, overshoot
             pitch = (float) right_left_gap/higher_speed;    //right   +  left      -   MAX = 15    From 8, starts to overshoot
@@ -975,10 +992,14 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         throttle /= 2;
         pitch /= 2;
 
+        showToast(String.format("x: %f, y: %f",roll,pitch));
+
         double flying_time = distance /sqrt(roll*roll + pitch*pitch);
         double first_fly_time= flying_time*1000;
+
         Log.i("flying",String.format("x: %f, y: %f, z: %ff",right_left_gap,front_back_gap,up_down_gap));
         Log.i("flying",String.format("forward: %f, horizontal: %f, up: %f, fly time: %f",roll,pitch,throttle,flying_time));
+
         if (flying_time > 10) {
             setZero();
         } else {
@@ -987,27 +1008,26 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 @Override
                 public void run() {
                     setZero();
-                    if(emg_now) return;
-                    showToast("first trip");
                     GoForwardSequence();
+
                     }
             }, (long) first_fly_time);
         }
     }
-
     public void GoForwardSequence() {
-        roll=1;
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
+        roll=(float).9;
+        Handler ghandler = new Handler();
+        ghandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 setZero();
                 GoUpSequence();
+                //showToast("Getting closer");
             }
-        }, (long) 1);
+        },  1000);
     }
     public void GoUpSequence() {
-        throttle=1;
+        throttle=(float)0.5;
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -1015,23 +1035,24 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 setZero();
                 GoBackSequence();
             }
-        }, (long) 1);
+        }, 2000);
     }
     public void GoBackSequence() {
-        ReturnMock();
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
+        pitch = (float) -back_pitch;
+        roll = (float) -back_roll;
+        Handler bhandler = new Handler();
+        bhandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 setZero();
-                showToast("Wellcome Home");
+                showToast( "p "+back_pitch+" r "+back_roll+ "  t "+ back_first_fly_time);
             }
-        }, (long) 1);
+        },  (long)back_first_fly_time);
     }
 
-    public void ReturnMock(float xx, float yy, int tt){
-        pitch=-xx;
-        roll=-yy;
+    public void ReturnMock(double xxpitch, double yyroll, double tt){
+        pitch=(float)-xxpitch;
+        roll=(float)-yyroll;
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -1043,22 +1064,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         }, (long) tt);
 
-    }
-    public void ReturntoOrigin() {
-        pitch = -(float)back_pitch;
-        back_roll=-(float)back_roll-1;
-        //back_throttle;
-        //back_yaw;
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast("returning home");
-
-            }
-        }, (long) back_first_fly_time*2);
-        SetYaw(50,4);
     }
 
     public void Finalbit(float x_speed, float y_speed,int delay_ms) {            // Last 1 meter
