@@ -367,17 +367,22 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             public void onClick(View v) {
 
 
-
                 EnableVirtualStick.performClick();
-                Segment1(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
-//                TakeOffBtn.performClick();
+                TakeOffBtn.performClick();
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Do something here
+                        Segment1(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
+                        //Segment2(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
+                    }
+                }, (long) (5000));
 //                showToast("0 %3.f"+arucotranslationvector[0]+"  1  %3.f"+arucotranslationvector[1]+"  2  %3.f"+arucotranslationvector[2]);
 //                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
 //                    @Override
 //                    public void run() {
-//                        //Do something here
-//                        Segment1(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
-//                        //Segment2(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
+
 //                    }
 //                }, 2000);
 //
@@ -1065,7 +1070,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 Segment2(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
                 //Segment2(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
             }
-        }, 3000);
+        }, 2000);
 
     }
 
@@ -1086,7 +1091,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
 //            double front_back_gap_goback = front_back_gap;
             front_back_gap -= 0.1; //0.3 meter in front of the marker
-            up_down_gap +=0.77; // 0.85m above the marker's center is the catch mechanism
+            up_down_gap +=0.75; // 0.85m above the marker's center is the catch mechanism
             // side= 0.318   forw = 0.549   down= 0.656
 
             //Getting distance for first approach (1m stand off)
@@ -1155,15 +1160,14 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
     public void GoForwardSequence() {
         EnableVirtualStick.performClick();
-        roll=(float).7;
+        roll=(float).75;
         throttle = (float)0.5;
         double time_s= 1000;
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 setZero();
-                SetBackward(1,1000);
-
+                BackafterS2();
                 //GoBackNew();
             }
         }, (long) (time_s));
@@ -1173,22 +1177,33 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         seg3_dist[1] = ydist;
         seg3_dist[2]=  zdist;
 
-
         seg1_dist[1]+=ydist;
         seg1_dist[2]+=zdist;
         totalflytime += time_s;
     }
-    public void GoUpSequence() {
-        throttle=(float)0.5;
-        Handler thandler = new Handler();
-        thandler.postDelayed(new Runnable() {
+    public void BackafterS2() {
+        EnableVirtualStick.performClick();
+        roll=-(float)0.7;
+        new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 setZero();
-                showToast("Up Seq");
-//                GoBackSequence();
+                showToast("Backward");
+                LandBtn.performClick();
             }
-        }, 1000);
+        }, (long) (3000));
+
+
+//        roll = (float) (-1);
+//        Handler handler = new Handler();
+//        handler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                setZero();
+//                showToast("Backward");
+//            }
+//        },(long) 2000 );
+
     }
 
     public void GoBackNew() {
