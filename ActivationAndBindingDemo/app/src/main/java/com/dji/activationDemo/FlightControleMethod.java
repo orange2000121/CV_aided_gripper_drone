@@ -14,6 +14,7 @@ import dji.sdk.flightcontroller.FlightController;
 
 public class FlightControleMethod {
     public double roll, pitch, throttle, yaw;// control the drone flying
+    private double[] aruco_coordinates={0,0,0};
     public boolean emg_now = false;// emergency button
     FlightController flightController;
     public FlightControleMethod(FlightController flightController){
@@ -55,8 +56,6 @@ public class FlightControleMethod {
         throttle /= 2;
         pitch /= 2;
         double flying_time = distance / sqrt(roll * roll + pitch * pitch);
-        showToast(String.format("roll: %.2f, pitch: %.2f, throttle: %.2f, fly time: %.2f", roll, pitch, throttle,
-                flying_time));
         Log.i("flying", String.format("x: %f, y: %f, z: %ff", right_left_gap, front_back_gap, up_down_gap));
         Log.i("flying",
                 String.format("forward: %f, horizontal: %f, up: %f, fly time: %f", roll, pitch, throttle, flying_time));
@@ -70,7 +69,7 @@ public class FlightControleMethod {
                     setZero();
                     if (emg_now)
                         return;
-                    TwoDAruco(aruco_coordinates[0], aruco_coordinates[2], 0, arucoyaw);
+                    TwoDAruco(aruco_coordinates[0], aruco_coordinates[2], 0, 0);
                 }
             }, (long) flying_time * 1000);
         }
