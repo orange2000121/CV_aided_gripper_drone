@@ -308,7 +308,7 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
 
         int picwidth = 1280;
         int picheight = 960;
-        float MarkerSizeinm = (float) 0.2;
+        float MarkerSizeinm = (float) 0.181;
         List<Mat> corners = new ArrayList();
         corners.clear();
         Mat droneImage = new Mat();
@@ -321,6 +321,11 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
         BitmapFromFeedersSurface = Bitmap.createScaledBitmap(mVideoSurface.getBitmap(),picwidth,picheight, true);
         RGBmatFromBitmap = new Mat();
 
+
+//        double tall=0, with=0;
+//        tall = mCodecManager.getVideoHeight();
+//        with = mCodecManager.getVideoWidth();
+//        showToast(("tall"+ tall+"    width"+with));
 
         Utils.bitmapToMat(BitmapFromFeedersSurface, droneImage);
         Imgproc.cvtColor(droneImage, grayImage, Imgproc.COLOR_BGR2GRAY);
@@ -349,43 +354,44 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
             Mat rvec1 = new Mat();
             Mat tvec1 = new Mat();
 
-            // Camera Matrix 2
-            //M300
-
-            Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F);
-            cameraMatrix.put(0, 0, 559.388552); //fx
-            cameraMatrix.put(1, 1, 548.464681); //fy
-            cameraMatrix.put(0, 2, 689.2842676); //cx
-            cameraMatrix.put(1, 2, 525.3168878); //cy
+//            //  Test camera matrix
+            Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F); //300 - 600
+            cameraMatrix.put(0, 0, 577.12265401-30); //fx
+            cameraMatrix.put(1, 1, 577.12265401-30); //fy
+            cameraMatrix.put(0, 2, 624.27619131); //cx
+            cameraMatrix.put(1, 2, 493.79682551); //cy
             cameraMatrix.put(2, 2, 1);
+//            showToast(cameraMatrix.toString());
 
-            //Distorsion coefficients
+            // Distorsion coefficients
+            Mat distCoeffs = Mat.zeros(0, 1, CvType.CV_64F);
+            distCoeffs.put(0,0, -1.00067366e-01);
+            distCoeffs.put(1,0,-4.24388662e-02 );
+            distCoeffs.put(2,0,5.06785331e-05);
+            distCoeffs.put(3,0, -2.77194518e-03);
+            distCoeffs.put(4,0,  3.90751297e-01);
+//            distCoeffs.put(5,0,   1.76991593e-02 );
+//            distCoeffs.put(6,0,  -3.57610859e-02);
+//            distCoeffs.put(7,0,  4.21848915e-01);
 
-            Mat distCoeffs = Mat.zeros(5, 1, CvType.CV_64F);
 
-            distCoeffs.put(0,0, -0.1445966);
-            distCoeffs.put(1,0,0.0139110);
-            distCoeffs.put(2,0,0.0067493);
-            distCoeffs.put(3,0, 0.0069193);
-            distCoeffs.put(4,0, -0.0012685);
+//
+//            Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F);
+//            cameraMatrix.put(0, 0, 893.42840576-0); //fx
+//            cameraMatrix.put(1, 1, 877.09185791-0); //fy
+//            cameraMatrix.put(0, 2, 624.81191272); //cx
+//            cameraMatrix.put(1, 2, 514.94520346); //cy
+//            cameraMatrix.put(2, 2, 1);
+//
+//            //Distorsion coefficients
+//
+//            Mat distCoeffs = Mat.zeros(5, 1, CvType.CV_64F);
+//            distCoeffs.put(0,0, .21450156);
+//            distCoeffs.put(1,0,-1.57484691);
+//            distCoeffs.put(2,0,0.03136477);
+//            distCoeffs.put(3,0, -0.03581248);
+//            distCoeffs.put(4,0, 1.22821392);
 
-            /*Phantom 4
-            Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F);
-            cameraMatrix.put(0, 0, 727.38195801); //fx
-            cameraMatrix.put(1, 1, 639.74169922); //fy
-            cameraMatrix.put(0, 2, 659.16527361); //cx
-            cameraMatrix.put(1, 2, 309.58174906); //cy
-            cameraMatrix.put(2, 2, 1);
-
-            //Distorsion coefficients
-
-            Mat distCoeffs = Mat.zeros(5, 1, CvType.CV_64F);
-            distCoeffs.put(0,0, 0.04491797);
-            distCoeffs.put(1,0,-0.03559581);
-            distCoeffs.put(2,0,-0.00177915);
-            distCoeffs.put(3,0, 0.00825589);
-            distCoeffs.put(4,0, 0.00827315);
-            */
 
             //Objects Points
 
@@ -418,7 +424,7 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
 
             for(int i = 0;i<ids.toArray().length;i++){
 
-                Aruco.drawAxis(RGBmatFromBitmap, cameraMatrix, distCoeffs, rvecs.row(i), tvecs.row(i), 0.13f);
+                Calib3d.drawFrameAxes(RGBmatFromBitmap, cameraMatrix, distCoeffs, rvecs.row(i), tvecs.row(i), 0.13f);
                 Mat arucorotationmat = new Mat(3,3,6);
                 Calib3d.Rodrigues (rvecs.row(i), arucorotationmat);
                 Mat cameraMatrixAruco = new Mat();
@@ -452,8 +458,6 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
                 arucoroll = ArucoeulerAngles.get(0,0)[0];  //for debugging, printing on screen
                 arucopitch = ArucoeulerAngles.get(1,0)[0];
                 arucoyaw = -ArucoeulerAngles.get(2,0)[0];// change sign to get the rotation needed by the drone not the paper
-
-
 
 
                 distCoeffs = new MatOfDouble(distCoeffs);
@@ -561,16 +565,16 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
             theTextView6.setTextColor(Color.BLUE);
 
         }
-
-        /*float current = System.currentTimeMillis();
-        deltatime += current - previous;
-        if(deltatime>1){
-            Toast.makeText(this, "differencia"+deltatime,Toast.LENGTH_SHORT).show();
-            saveImageToExternalStorage(BitmapFromFeedersSurface);
-        }
-        previous = current;
-        */
-
+//
+//        float current = System.currentTimeMillis();
+//        deltatime += current - previous;
+////        showToast(String.valueOf(deltatime));131072*200
+//        if(deltatime>1000){
+//            Toast.makeText(this, "differencia"+deltatime,Toast.LENGTH_SHORT).show();
+//            saveImageToExternalStorage(BitmapFromFeedersSurface);
+//
+//        }
+//        previous = current;
 
 
         Bitmap DisplayBitmap = Bitmap.createBitmap(RGBmatFromBitmap.cols(),RGBmatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
