@@ -123,6 +123,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 //--------Aruco variables
     private final ArrayList<Point3> aruco_coordinate_buffer = new ArrayList<>(Collections.nCopies(10, null));
     private double[] aruco_coordinates = {0,0,0};//todo : change aruco_translation_vector to aruco_coordinates in this file
+    private List<ArucoCoordinate> current_arucos = new ArrayList<>();
 //--------
     ArrayList<Float> allx = new ArrayList<>();
     ArrayList<Float> ally = new ArrayList<>();
@@ -172,11 +173,11 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 super.onManagerConnected(status);
             }
         }
+
     };
 
     private void initParams() {
-
-        // We recommand you use the below settings, a standard american hand style.
+        // We recommend you use the below settings, a standard american hand style.
         if (flightController == null) {
             if (ModuleVerificationUtil.isFlightControllerAvailable()) {
                 flightController = DemoApplication.getAircraftInstance().getFlightController();
@@ -802,7 +803,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
             MatOfPoint3f mcorners = new MatOfPoint3f();
             mcorners.fromList(corners4);
-
+            current_arucos.clear(); //reset the list of arucos
             for (int i = 0; i < ids.toArray().length; i++) {
 
                 Calib3d.drawFrameAxes(RGBmatFromBitmap, cameraMatrix, distCoeffs, rvecs.row(i), tvecs.row(i), 0.13f);
@@ -839,7 +840,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 arucoroll = ArucoeulerAngles.get(0, 0)[0];  //for debugging, printing on screen
                 arucopitch = ArucoeulerAngles.get(1, 0)[0];
                 arucoyaw = -ArucoeulerAngles.get(2, 0)[0];// change sign to get the rotation needed by the drone not the paper
-
+                //Add the aruco to the currently detected aruco
+                current_arucos.add(new ArucoCoordinate(aruco_translation_vector[0], aruco_translation_vector[1], aruco_translation_vector[2], arucoroll, arucopitch, arucoyaw,(int) ids.get(i, 0)[0]));
 
                 distCoeffs = new MatOfDouble(distCoeffs);
 
@@ -850,6 +852,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 Point[] points = projected.toArray();
 
                 if (points != null) {
+                    //Draw the circle of the aruco corners
                     for (Point point : points) {
                         Imgproc.circle(RGBmatFromBitmap, points[0], 10, new Scalar(255, 0, 0), 4);
                         Imgproc.circle(RGBmatFromBitmap, points[1], 10, new Scalar(0, 0, 0), 4);
@@ -918,11 +921,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 } else {
                     fixz = (meanz - .03) - (abs(meanx) * 0.09);
                 }
-
-
-//                showToast(" cuanto: " +sumyaw+" cauntas: " +yawhowmany+" X: " + String.format("%.3f", (meanx)) +
-//                        "   Y: " + String.format("%.3f", (meany)) + "   Z: " + String.format("%.3f", (meanz)) + "  fixz:" + String.format("%.3f", (fixz)));
-
                 allx.clear();
                 ally.clear();
                 all_z.clear();
@@ -1547,3 +1545,19 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     }
 }
 
+/**
+ * all data of the aruco marker
+ */
+class ArucoCoordinate{
+    double x,y,z,yaw,pitch,roll;
+    int id;
+    ArucoCoordinate(double x, double y, double z, double yaw, double pitch, double roll, int id){
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.yaw = yaw;
+        this.pitch = pitch;
+        this.roll = roll;
+        this.id = id;
+    }
+}
