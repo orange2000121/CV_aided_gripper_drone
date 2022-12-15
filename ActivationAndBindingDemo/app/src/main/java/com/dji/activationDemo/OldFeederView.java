@@ -39,6 +39,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
@@ -106,6 +107,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     double back_roll;
     double back_throttle;
     double back_yaw;
+    private FlightControlMethod flight = new FlightControlMethod();
 
 //--------Camera
     private Button mCaptureBtn;
@@ -189,6 +191,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
+        // Turn off the avoidance system
         flightAssistant.setLandingProtectionEnabled(false,null);
         flightAssistant.setCollisionAvoidanceEnabled(false, null);
 
@@ -203,6 +206,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         initParams();
         dronestart();
         FlightController flightController = ModuleVerificationUtil.getFlightController();
+        flight.register(flightController);
         if (flightController == null) {
             return;
         }
@@ -218,9 +222,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 }
             }
         };
-        /****************************************************************************/
-        /***************************   Button Function   ****************************/
-        /****************************************************************************/
+        /* -------------------------------------------------------------------------- */
+        /*                               Button Function                              */
+        /* -------------------------------------------------------------------------- */
         mCaptureBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -374,21 +378,22 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        //Do something here
-                        Segment1(aruco_translation_vector[0],fixz,-aruco_translation_vector[1]);
-                        //Segment2(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
+                        // 往需提取物品的方向移動
+                        ArucoCoordinate goal = flight.findAruco(23);
+                        flight.moveTo(goal.x,goal.z -1.2,-goal.y + 0.9,0);
+                        // 再靠近一點
+                        SystemClock.sleep(2000); // wait for the Aruco detection
+                        goal = flight.findAruco(23);
+                        flight.moveTo(goal.x,goal.z - 0.1,-goal.y + 0.75,0);
+                        //往前往上吊起物品
+                        flight.moveTo(0,0.75,0,0);
+                        flight.moveTo(0,0,0.5,0);
+                        //往終點移動
+                        goal = flight.findAruco(15);
+                        flight.moveTo(goal.x,goal.z - 0.5,-goal.y + 0.75,0);
+                        LandBtn.performClick();
                     }
                 }, (long) (5000));
-//                showToast("0 %3.f"+arucotranslationvector[0]+"  1  %3.f"+arucotranslationvector[1]+"  2  %3.f"+arucotranslationvector[2]);
-//                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-
-//                    }
-//                }, 2000);
-//
-//                Segment1(1.8,1.2,-2.3);
-//                GoForwardSequence();
 
 
             }
@@ -397,7 +402,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         MoveTo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showToast("Empty block");
+                flight.arucoCoordinateList = current_arucos;
+                flight.findAruco(23);
             }
         });
 
@@ -841,6 +847,15 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 arucopitch = ArucoeulerAngles.get(1, 0)[0];
                 arucoyaw = -ArucoeulerAngles.get(2, 0)[0];// change sign to get the rotation needed by the drone not the paper
                 //Add the aruco to the currently detected aruco
+                /*
+                * todo: check why need change z-axis distance
+                * Correct the z-axis distance
+                */
+                if (abs(aruco_translation_vector[0]) < 0.65) {
+                    aruco_translation_vector[2] = (aruco_translation_vector[2] - .03);
+                } else {
+                    aruco_translation_vector[2] = (aruco_translation_vector[2] - .03) - (abs(aruco_translation_vector[0]) * 0.09);
+                }
                 current_arucos.add(new ArucoCoordinate(aruco_translation_vector[0], aruco_translation_vector[1], aruco_translation_vector[2], arucoroll, arucopitch, arucoyaw,(int) ids.get(i, 0)[0]));
 
                 distCoeffs = new MatOfDouble(distCoeffs);
@@ -950,6 +965,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         } else {
             aruco_coordinate_buffer.remove(0);
             aruco_coordinate_buffer.add(null);
+            current_arucos.clear();
         }
         //todo : get the median of the aruco_coordinate_buffer
         List<Double> x_list =new ArrayList<Double>(), y_list = new ArrayList<Double>(), z_list = new ArrayList<Double>();
@@ -984,7 +1000,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         }
     }
     public void Segment1(double right_left_gap, double front_back_gap, double up_down_gap){
-
+        Log.i("flydemo", "Segment1");
         EnableVirtualStick.performClick();
         flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
         flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
@@ -999,31 +1015,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             //Getting distance for first approach (1m stand off)
             double distance = sqrt(right_left_gap*right_left_gap + front_back_gap*front_back_gap + up_down_gap*up_down_gap);
             float higher_speed = (float) max(abs(right_left_gap),abs(front_back_gap));
-
-            //Getting GoBack parametters
-//                double distance_goback = sqrt(right_left_gap*right_left_gap + front_back_gap_goback*front_back_gap_goback);
-//                float higher_speed_goback = (float) max(abs(right_left_gap),abs(front_back_gap_goback));
-//                double roll_goback = front_back_gap_goback / (higher_speed_goback*2);
-//                double pitch_goback = right_left_gap / (higher_speed_goback*2);
-//                double flying_time_goback = distance_goback / sqrt(roll_goback*roll_goback + pitch_goback*pitch_goback);
-//                back_first_fly_time = flying_time_goback*1000;
-//                back_pitch= pitch_goback;
-//                back_roll= roll_goback;
-//                showToast(String.format("xxxx: %f, yyyyy: %f",back_roll,back_pitch));
-//                back_throttle= 0;
-
-//                if(higher_speed>){
-//                    roll = (float) front_back_gap/higher_speed;     //forward +  backwards -   MAX 15 From 8, overshoot
-//                    throttle = (float) up_down_gap/higher_speed;    //up      +  down      -   MAX 4 From 3, overshoot
-//                    pitch = (float) right_left_gap/higher_speed;    //right   +  left      -   MAX = 15    From 8, starts to overshoot
-//
-//
-//                }else{
-//                    double basic_speed = 0.6;
-//                    roll =  (float) (basic_speed * front_back_gap);
-//                    throttle = (float)(basic_speed * up_down_gap);
-//                    pitch = (float)(basic_speed * right_left_gap);
-//                }
             double basic_speed = 0.8;
             roll =  (float) (basic_speed * front_back_gap);
             throttle = (float)(basic_speed * up_down_gap);
@@ -1065,6 +1056,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
     }
     public void Wait(){
+        Log.i("flydemo", "Wait");
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -1077,6 +1069,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     }
 
     public void Segment2(double right_left_gap, double front_back_gap, double up_down_gap){
+        Log.i("flydemo", "Segment2");
         flightController.setVirtualStickModeEnabled(true, djiError -> {
             flightController.setVirtualStickAdvancedModeEnabled(true);
 
@@ -1161,6 +1154,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
 
     public void GoForwardSequence() {
+        Log.i("flydemo", "GoForwardSequence");
         EnableVirtualStick.performClick();
         roll=(float).75;
         throttle = (float)0.5;
@@ -1169,7 +1163,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             @Override
             public void run() {
                 setZero();
-                BackafterS2();
+                flight.function_times = 0;
+                flight.findAruco(23);
+//                BackafterS2();
                 //GoBackNew();
             }
         }, (long) (time_s));
@@ -1498,6 +1494,10 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     private class SendVirtualStickDataTask extends TimerTask {
         @Override
         public void run() {
+            pitch = flight.pitch;
+            roll = flight.roll;
+            throttle = flight.throttle;
+            yaw = flight.yaw;
             if (flightController != null) {
                 //接口写反了，setPitch()应该传入roll值，setRoll()应该传入pitch值
                 flightController.sendVirtualStickFlightControlData(new FlightControlData(pitch, roll, yaw, throttle), new CommonCallbacks.CompletionCallback() {
