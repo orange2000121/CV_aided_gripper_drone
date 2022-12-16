@@ -192,8 +192,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
         // Turn off the avoidance system
-        flightAssistant.setLandingProtectionEnabled(false,null);
-        flightAssistant.setCollisionAvoidanceEnabled(false, null);
+//        flightAssistant.setLandingProtectionEnabled(false,null);
+//        flightAssistant.setCollisionAvoidanceEnabled(false, null);
 
 
     }
@@ -207,6 +207,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         dronestart();
         FlightController flightController = ModuleVerificationUtil.getFlightController();
         flight.register(flightController);
+        flight.register(current_arucos);
         if (flightController == null) {
             return;
         }
@@ -371,31 +372,25 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             @Override
             public void onClick(View v) {
 
-
                 EnableVirtualStick.performClick();
                 TakeOffBtn.performClick();
-
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        // 往需提取物品的方向移動
-                        ArucoCoordinate goal = flight.findAruco(23);
-                        flight.moveTo(goal.x,goal.z -1.2,-goal.y + 0.9,0);
-                        // 再靠近一點
-                        SystemClock.sleep(2000); // wait for the Aruco detection
-                        goal = flight.findAruco(23);
-                        flight.moveTo(goal.x,goal.z - 0.1,-goal.y + 0.75,0);
-                        //往前往上吊起物品
-                        flight.moveTo(0,0.75,0,0);
-                        flight.moveTo(0,0,0.5,0);
-                        //往終點移動
-                        goal = flight.findAruco(15);
-                        flight.moveTo(goal.x,goal.z - 0.5,-goal.y + 0.75,0);
-                        LandBtn.performClick();
-                    }
-                }, (long) (5000));
-
-
+                Thread thread = new Thread(()->{
+                    // 往需提取物品的方向移動
+                    ArucoCoordinate goal = flight.findAruco(23);
+                    flight.moveTo(goal.x,goal.z -1.2,-goal.y + 0.9,0);
+                    // 再靠近一點
+                    SystemClock.sleep(2000); // wait for the Aruco detection
+                    goal = flight.findAruco(23);
+                    flight.moveTo(goal.x,goal.z - 0.1,-goal.y + 0.75,0);
+                    //往前往上吊起物品
+                    flight.moveTo(0,0.75,0,0);
+                    flight.moveTo(0,0,0.5,0);
+                    //往終點移動
+                    goal = flight.findAruco(15);
+                    flight.moveTo(goal.x,goal.z - 0.5,-goal.y + 0.75,0);
+                    flightController.startLanding(djiError -> Log.i(TAG, "Landing: " + djiError));
+                });
+                thread.start();
             }
         });
 
@@ -674,7 +669,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
         int pic_width = 1280;
         int pic_height = 960;
-        float MarkerSizeinm = (float) 0.181;  //A4 paper
+        float MarkerSizeinm = (float) 0.182;  //A4 paper
         //float MarkerSizeinm = (float) 0.282;  //A3 paper
 
         double tall = 0, with = 0;

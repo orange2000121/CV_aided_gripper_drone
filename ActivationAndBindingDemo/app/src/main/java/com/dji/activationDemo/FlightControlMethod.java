@@ -1,6 +1,5 @@
 package com.dji.activationDemo;
 
-import static com.dji.activationDemo.ToastUtils.showToast;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -49,32 +48,27 @@ public class FlightControlMethod {
      * @return : if found it return aruco coordinate, else return null, type: ArucoCoordinate
      */
     public ArucoCoordinate findAruco(int aruco_id){
-        if (arucoCoordinateList == null) {
-            showToast("Didn't register aruco list");
-            return null;
-        };
-        if (function_times >100) return null;
-        Log.i("flydemo", "findAruco: "+aruco_id);
-        function_times++;
-        yaw = 5;// can be changed
-        //determine the aruco is in the list
-        for(ArucoCoordinate arucoCoordinate : arucoCoordinateList){
-            if(arucoCoordinate.id == aruco_id){
-                setZero();
-                Log.i("flydemo", "found : "+aruco_id);
-                return arucoCoordinate;
+        function_times = 0;
+        while (true){
+            if (arucoCoordinateList == null) {
+                Log.w(TAG,"Didn't register aruco list");
+                return null;
+            };
+            if (function_times >100) return null;
+            function_times++;
+            yaw = 5;// can be changed
+            //determine the aruco is in the list
+            for(ArucoCoordinate arucoCoordinate : arucoCoordinateList){
+                if(arucoCoordinate.id == aruco_id){
+                    setZero();
+                    return arucoCoordinate;
+                }
             }
+            //if not found, keep searching
+            SystemClock.sleep(1000);
         }
-        //if not found, keep searching
-        SystemClock.sleep(1000);
-        return findAruco(aruco_id);
-    }
 
-    public void goToSecondAruco(ArucoCoordinate aruco){
-        Log.i("flydemo", "goToSecondAruco: "+aruco.id);
-        moveTo(aruco.x,aruco.y-1,aruco.z,0);
     }
-
     /**
      * Change the yaw control mode velocity or angle
      * @param mode : "VELOCITY" or "ANGLE", type: String
@@ -99,7 +93,6 @@ public class FlightControlMethod {
     /*                            functional function                             */
     /* -------------------------------------------------------------------------- */
     public void moveTo(double right_left_gap, double front_back_gap, double up_down_gap, double yaw) {
-        showToast("going");
         flightController.setVirtualStickModeEnabled(true, djiError -> {
             flightController.setVirtualStickAdvancedModeEnabled(true);
             if (djiError != null) {
@@ -148,7 +141,6 @@ public class FlightControlMethod {
         roll = (float) 0.0;
         throttle = (float)0.0;
         yaw = (float)(0.0);
-        showToast("STOP");
 
     }
 
