@@ -365,19 +365,19 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                     // 往需提取物品的方向移動
                     ArucoCoordinate goal = flight.findAruco(23);
                     if(goal == null) return;
-                    flight.moveTo(goal.x,goal.z -1.2,-goal.y + 0.9,0);
+                    flight.moveTo(goal.x,goal.z -1.2,-goal.y + 0.9);
                     // 再靠近一點
                     SystemClock.sleep(2000); // wait for the Aruco detection
                     goal = flight.findAruco(23);
                     if(goal == null) return;
-                    flight.moveTo(goal.x,goal.z - 0.5,-goal.y + 0.75,0);
+                    flight.moveTo(goal.x,goal.z - 0.5,-goal.y + 0.75);
                     //往前往上吊起物品
-                    flight.moveTo(0,0.5,0,0);
-                    flight.moveTo(0,0,0.5,0);
+                    flight.moveTo(0,0.5,0);
+                    flight.moveTo(0,0,0.5);
                     //往終點移動
                     goal = flight.findAruco(15);
                     if(goal == null) return;
-                    flight.moveTo(goal.x,goal.z - 1.2,-goal.y + 1,0);
+                    flight.moveTo(goal.x,goal.z - 1.2,-goal.y + 1);
                     flightController.startLanding(djiError -> Log.i(TAG, "Landing: " + djiError));
                 });
                 flight_thread.start();

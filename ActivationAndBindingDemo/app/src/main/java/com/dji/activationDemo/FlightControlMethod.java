@@ -48,6 +48,10 @@ public class FlightControlMethod {
 //        if(goal_aruco==null) return;
 //        moveTo(goal_aruco.x, goal_aruco.z - 2, -goal_aruco.y+1, goal_aruco.yaw);
         ArucoCoordinate goal_aruco = findAruco(aruco_id);
+        if(goal_aruco==null){
+            Log.e(TAG, "goToArucoMarker: goal_aruco==null");
+            return;
+        }
         normalizeForwardAngle(goal_aruco);
     }
     public void emergency(){
@@ -81,19 +85,27 @@ public class FlightControlMethod {
             SystemClock.sleep(1000);
         }
     }
+
+    /**
+     * 假設aruco marker在正前方，aruco.pitch當作旋轉的角度，aruco.z當作旋轉半徑。<br/>
+     * 旋轉到aruco marker的正前方。<br/>
+     * @param aruco : the aruco marker you want to rotate to
+     */
     void normalizeForwardAngle(ArucoCoordinate aruco){
         if(emg_now) return;
         //degree to radian
         float radian = (float) (aruco.pitch * Math.PI / 180);
         float radius = aruco.z;
         float arc_length = radius * radian;
-        Log.i("normalizeForwardAngle", "arc_length: " + arc_length);
-        float time = arc_length / 0.1f; // 1m/s, can be changed, unit: second
-        Log.i("normalizeForwardAngle", "time: " + time);
+        float time = abs(aruco.pitch/5) ; // 5 degree per second
         //set the speed
-        pitch = 0.1f;
-        yaw = aruco.pitch/time;
-        Log.i("normalizeForwardAngle", "yaw: " + yaw);
+        pitch = -arc_length/time; // 左右移動和旋轉不同方向
+        yaw = aruco.pitch<0 ? -5 : 5;// 5 degree per second
+        Log.i(TAG, "arc_length: " + arc_length);
+        Log.i(TAG, "angle: " + aruco.pitch);
+        Log.i(TAG, "pitch: " + pitch);
+        Log.i(TAG, "yaw: " + yaw);
+        Log.i(TAG, "time: " + time);
         //set the time
         SystemClock.sleep((long) time*1000);
         setZero();
@@ -119,10 +131,16 @@ public class FlightControlMethod {
                  break;
         }
     }
+
     /* -------------------------------------------------------------------------- */
     /*                            functional function                             */
     /* -------------------------------------------------------------------------- */
-    public void moveTo(double right_left_gap, double front_back_gap, double up_down_gap, double yaw) {
+    /**
+     * @param right_left_gap : the gap between drone and aruco marker in x axis
+     * @param front_back_gap : the gap between drone and aruco marker in z axis
+     * @param up_down_gap : the gap between drone and aruco marker in y axis
+     */
+    public void moveTo(double right_left_gap, double front_back_gap, double up_down_gap) {
         if(emg_now) return;
         flightController.setVirtualStickModeEnabled(true, djiError -> {
             flightController.setVirtualStickAdvancedModeEnabled(true);
