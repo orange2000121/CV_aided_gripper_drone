@@ -23,13 +23,12 @@ import org.opencv.imgproc.Imgproc;
 import static com.dji.activationDemo.ToastUtils.showToast;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.sqrt;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
@@ -38,7 +37,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.TextureView;
@@ -74,11 +72,8 @@ import dji.common.gimbal.GimbalState;
 import dji.common.product.Model;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.base.BaseProduct;
-import dji.sdk.camera.Camera;
-import dji.sdk.camera.Lens;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
-import dji.sdk.flightcontroller.Compass;
 import dji.sdk.flightcontroller.FlightAssistant;
 import dji.sdk.flightcontroller.FlightController;
 
@@ -95,29 +90,22 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     private OnScreenJoystick screenJoystickRight,screenJoystickLeft;
     private Timer mSendVirtualStickDataTimer;
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
-    private Compass compass;
     private boolean emg_now = false;
     double fixz;
-    double seg1_dist[]={0,0,0};
-    double seg2_dist[]={0,0,0};
-    double seg3_dist[]={0,0,0};
+    double[] seg1_dist ={0,0,0};
+    double[] seg2_dist ={0,0,0};
+    double[] seg3_dist ={0,0,0};
     double totalflytime=0;
-    double back_first_fly_time;
-    double back_pitch;
-    double back_roll;
-    double back_throttle;
-    double back_yaw;
-    private FlightControlMethod flight = new FlightControlMethod();
+    private final FlightControlMethod flight = new FlightControlMethod();
+    Thread flight_thread = null;
 
 //--------Camera
     private Button mCaptureBtn;
-    private Camera camera;
-    private Lens lens;
 
 //--------Video Feed
     protected TextureView mVideoTexture = null;
     protected ImageView mImageSurface;
-    private Bitmap sourceBitmap, BitmapFromFeedersSurface;
+    private Bitmap BitmapFromFeedersSurface;
     private Mat RGBmatFromBitmap;
     private MatOfInt ids;
     private Dictionary dictionary;
@@ -192,8 +180,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
         // Turn off the avoidance system
-//        flightAssistant.setLandingProtectionEnabled(false,null);
-//        flightAssistant.setCollisionAvoidanceEnabled(false, null);
+        flightAssistant.setLandingProtectionEnabled(true,null);
+        flightAssistant.setCollisionAvoidanceEnabled(true, null);
 
 
     }
@@ -266,10 +254,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         EmergencyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                emg_now = !emg_now;
-                setZero();
+                flight.emergency();
                 saveImageToExternalStorage(BitmapFromFeedersSurface);
-                if(emg_now){
+                if(flight.emg_now){
                     showToast("Emergency");
                 }else {
                     showToast("dismiss the alert");
@@ -374,31 +361,36 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
                 EnableVirtualStick.performClick();
                 TakeOffBtn.performClick();
-                Thread thread = new Thread(()->{
+                flight_thread = new Thread(()->{
                     // 往需提取物品的方向移動
                     ArucoCoordinate goal = flight.findAruco(23);
+                    if(goal == null) return;
                     flight.moveTo(goal.x,goal.z -1.2,-goal.y + 0.9,0);
                     // 再靠近一點
                     SystemClock.sleep(2000); // wait for the Aruco detection
                     goal = flight.findAruco(23);
-                    flight.moveTo(goal.x,goal.z - 0.1,-goal.y + 0.75,0);
+                    if(goal == null) return;
+                    flight.moveTo(goal.x,goal.z - 0.5,-goal.y + 0.75,0);
                     //往前往上吊起物品
-                    flight.moveTo(0,0.75,0,0);
+                    flight.moveTo(0,0.5,0,0);
                     flight.moveTo(0,0,0.5,0);
                     //往終點移動
                     goal = flight.findAruco(15);
-                    flight.moveTo(goal.x,goal.z - 0.5,-goal.y + 0.75,0);
+                    if(goal == null) return;
+                    flight.moveTo(goal.x,goal.z - 1.2,-goal.y + 1,0);
                     flightController.startLanding(djiError -> Log.i(TAG, "Landing: " + djiError));
                 });
-                thread.start();
+                flight_thread.start();
             }
         });
 
         MoveTo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                flight.arucoCoordinateList = current_arucos;
-                flight.findAruco(23);
+                flight_thread = new Thread(()->{
+                    flight.goToArucoMarker(23);
+                });
+                flight_thread.start();
             }
         });
 
@@ -527,7 +519,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         //Bitmap resized = null;
         //resized = Bitmap.createScaledBitmap(finalBitmap,1280,960, true);
         String root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
-        File myDir = new File(root + "0/Selfie_Drone");
+        File myDir = new File(root + "/CV_drone");
         myDir.mkdirs();
         Random generator = new Random();
         int n = 10000;
@@ -547,7 +539,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             Writer writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
             String s = writer.toString();
-            showToast(s);
+//            showToast(s);
         }
 
         MediaScannerConnection.scanFile(this, new String[] { file.toString() }, null,
@@ -660,8 +652,43 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
+        //set shadow color of the emergency button
+        if(flight.emg_now){
+            EmergencyBtn.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
+        }
+        else{
+            EmergencyBtn.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
+        }
         aruco_coordinates=ArucoDetector();
+        if(!current_arucos.isEmpty()){
+            ArucoCoordinate aruco = current_arucos.get(0);
+            showScreenText(aruco.x,aruco.y,aruco.z,aruco.yaw,aruco.pitch,aruco.roll);
+        }
+        else{
+            showScreenText(null,null,null,null,null,null);
+        }
+    }
 
+    void showScreenText(Float x, Float y, Float z, Float yaw, Float pitch, Float roll){
+
+        TextView theTextView1 = (TextView) findViewById(R.id.textView1);
+        TextView theTextView2 = (TextView) findViewById(R.id.textView2);
+        TextView theTextView3 = (TextView) findViewById(R.id.textView3);
+        TextView theTextView4 = (TextView) findViewById(R.id.textView4);
+        TextView theTextView5 = (TextView) findViewById(R.id.textView5);
+        TextView theTextView6 = (TextView) findViewById(R.id.textView6);
+        theTextView1.setText("X: " + x);
+        theTextView2.setText("Y: " + y);
+        theTextView3.setText("Z: " + z);
+        theTextView6.setText("Roll: " + roll);
+        theTextView5.setText("Pitch: " + pitch);
+        theTextView4.setText("Yaw: " + yaw);
+        theTextView1.setTextColor(Color.BLUE);
+        theTextView2.setTextColor(Color.BLUE);
+        theTextView3.setTextColor(Color.BLUE);
+        theTextView4.setTextColor(Color.BLUE);
+        theTextView5.setTextColor(Color.BLUE);
+        theTextView6.setTextColor(Color.BLUE);
 
     }
 
@@ -805,8 +832,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             MatOfPoint3f mcorners = new MatOfPoint3f();
             mcorners.fromList(corners4);
             current_arucos.clear(); //reset the list of arucos
+//            List<ArucoCoordinate> tempAruco = new ArrayList<>(); //暫時存放aruco的資料
             for (int i = 0; i < ids.toArray().length; i++) {
-
                 Calib3d.drawFrameAxes(RGBmatFromBitmap, cameraMatrix, distCoeffs, rvecs.row(i), tvecs.row(i), 0.13f);
                 Mat aruco_rotation_vec = new Mat(3, 3, 6);
                 Calib3d.Rodrigues(rvecs.row(i), aruco_rotation_vec);
@@ -851,7 +878,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 } else {
                     aruco_translation_vector[2] = (aruco_translation_vector[2] - .03) - (abs(aruco_translation_vector[0]) * 0.09);
                 }
-                current_arucos.add(new ArucoCoordinate(aruco_translation_vector[0], aruco_translation_vector[1], aruco_translation_vector[2], arucoroll, arucopitch, arucoyaw,(int) ids.get(i, 0)[0]));
+
+                current_arucos.add(new ArucoCoordinate((float) aruco_translation_vector[0], (float) aruco_translation_vector[1], (float) aruco_translation_vector[2], (float) arucoroll, (float) arucopitch, (float) arucoyaw,(int) ids.get(i, 0)[0]));
 
                 distCoeffs = new MatOfDouble(distCoeffs);
 
@@ -883,7 +911,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 }
                 projected.release();
             }
-
             //doubles to float to make things faster
             zarucofloat = (float) aruco_translation_vector[2]; //the two value is the z axis through the camera
             yarucofloat = (float) -aruco_translation_vector[1]; //times -1 to make up distances positives
@@ -938,25 +965,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
             }
 
-            TextView theTextView1 = (TextView) findViewById(R.id.textView1);
-            TextView theTextView2 = (TextView) findViewById(R.id.textView2);
-            TextView theTextView3 = (TextView) findViewById(R.id.textView3);
-            TextView theTextView4 = (TextView) findViewById(R.id.textView4);
-            TextView theTextView5 = (TextView) findViewById(R.id.textView5);
-            TextView theTextView6 = (TextView) findViewById(R.id.textView6);
-            theTextView1.setText("X: " + String.format("%.3f", aruco_translation_vector[0]) + " ,  ");
-            theTextView2.setText("Y: " + String.format("%.3f", -aruco_translation_vector[1]) + " ,  ");
-            theTextView3.setText("Z: " + String.format("%.3f", aruco_translation_vector[2]) + " ,  FixZ" + String.format("%.3f", fixz));
-            theTextView4.setText("Yaw: " + String.format("%.3f", arucoyaw) + " ,  ");
-            theTextView5.setText("Roll: " + String.format("%.3f", arucoroll) + " ,  ");
-            theTextView6.setText("Pitch: " + String.format("%.3f", arucopitch) + " ,  ");
-            theTextView1.setTextColor(Color.BLUE);
-            theTextView2.setTextColor(Color.BLUE);
-            theTextView3.setTextColor(Color.BLUE);
-            theTextView4.setTextColor(Color.BLUE);
-            theTextView5.setTextColor(Color.BLUE);
-            theTextView6.setTextColor(Color.BLUE);
-
         } else {
             aruco_coordinate_buffer.remove(0);
             aruco_coordinate_buffer.add(null);
@@ -994,159 +1002,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             return (lower + upper) / 2.0;
         }
     }
-    public void Segment1(double right_left_gap, double front_back_gap, double up_down_gap){
-        Log.i("flydemo", "Segment1");
-        EnableVirtualStick.performClick();
-        flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
-        flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-        flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
-        flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
-
-        if(right_left_gap>0.8 || front_back_gap>1.5 || up_down_gap>1.4 ){
-//          double front_back_gap_goback = front_back_gap;
-            front_back_gap -= 1.2; //0.8 meter in front of aruco
-            up_down_gap += 0.9;
-
-            //Getting distance for first approach (1m stand off)
-            double distance = sqrt(right_left_gap*right_left_gap + front_back_gap*front_back_gap + up_down_gap*up_down_gap);
-            float higher_speed = (float) max(abs(right_left_gap),abs(front_back_gap));
-            double basic_speed = 0.8;
-            roll =  (float) (basic_speed * front_back_gap);
-            throttle = (float)(basic_speed * up_down_gap);
-            pitch = (float)(basic_speed * right_left_gap);
-            //reduce speed
-            roll /= 2;
-            throttle /= 2;
-            pitch /= 2;
-
-            //  Values to get the GetBack VELOCITY
-            seg1_dist[0]=right_left_gap;
-            seg1_dist[1]=up_down_gap;
-            seg1_dist[2]=front_back_gap;
-
-            double flying_time = distance /sqrt(roll*roll + pitch*pitch + throttle*throttle);
-            double first_fly_time= flying_time*1000;
-            totalflytime = first_fly_time;
-            showToast(String.format("X: %.3f,  Y: %.3f,  Z: %.3f,  T: %.3f",roll,pitch,throttle,flying_time));
-            Log.i("flying",String.format("x: %f, y: %f, z: %ff",right_left_gap,front_back_gap,up_down_gap));
-            Log.i("flying",String.format("forward: %f, horizontal: %f, up: %f, fly time: %f",roll,pitch,throttle,flying_time));
-            if (flying_time > 10) {
-                setZero();
-            } else {
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        setZero();
-                        Wait();
-                    }
-                }, (long) first_fly_time);
-            }
-        }
-        else{
-            setZero();
-            Wait();
-            showToast("skipped s1");
-        }
-
-    }
-    public void Wait(){
-        Log.i("flydemo", "Wait");
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //Do something here
-                Segment2(aruco_translation_vector[0],fixz,-aruco_translation_vector[1]);
-                //Segment2(arucotranslationvector[0],fixz,-arucotranslationvector[1]);
-            }
-        }, 2000);
-
-    }
-
-    public void Segment2(double right_left_gap, double front_back_gap, double up_down_gap){
-        Log.i("flydemo", "Segment2");
-        flightController.setVirtualStickModeEnabled(true, djiError -> {
-            flightController.setVirtualStickAdvancedModeEnabled(true);
-
-            if (djiError != null) {
-                ToastUtils.setResultToToast(djiError.getDescription());
-            }
-        });
-        flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
-        flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-        flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
-        flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
-
-        if(right_left_gap<0.9 && front_back_gap<1.4 && up_down_gap<1.2 ) {
-
-//            double front_back_gap_goback = front_back_gap;
-            front_back_gap -= 0.1; //0.3 meter in front of the marker
-            up_down_gap +=0.75; // 0.85m above the marker's center is the catch mechanism
-            // side= 0.318   forw = 0.549   down= 0.656
-
-            //Getting distance for first approach (1m stand off)
-            double distance = sqrt(right_left_gap * right_left_gap + front_back_gap * front_back_gap + up_down_gap*up_down_gap);
-            float higher_speed = (float) max(abs(up_down_gap), abs(front_back_gap));
-
-            //Getting GoBack parametters
-//            double distance_goback = sqrt(right_left_gap * right_left_gap + front_back_gap_goback * front_back_gap_goback);
-//            float higher_speed_goback = (float) max(abs(right_left_gap), abs(front_back_gap_goback));
-//            double roll_goback = front_back_gap_goback / (higher_speed_goback * 2);
-//            double pitch_goback = right_left_gap / (higher_speed_goback * 2);
-//            double flying_time_goback = distance_goback / sqrt(roll_goback * roll_goback + pitch_goback * pitch_goback);
-//            back_first_fly_time = flying_time_goback * 1000;
-//            back_pitch = pitch_goback;
-//            back_roll = roll_goback;
-//            showToast(String.format("xxxx: %f, yyyyy: %f", back_roll, back_pitch));
-//            back_throttle = 0;
-
-            double basic_speed = 0.6;
-            roll =  (float) (basic_speed * front_back_gap);
-            throttle = (float)(basic_speed * up_down_gap);
-            pitch = (float)(basic_speed * right_left_gap);
-            TextView theTextView7  = (TextView) findViewById(R.id.textView7);
-            theTextView7.setText(" up_down_gap = " + String.format("%.2f",up_down_gap));
-            theTextView7.setTextColor(Color.RED);
-
-            //reduce speed
-            roll /= 2;
-            throttle /= 2;
-            pitch /= 2;
-
-            //  Values to get the GetBack VELOCITY
-            seg1_dist[0]+=right_left_gap;
-            seg1_dist[1]+=up_down_gap;
-            seg1_dist[2]+=front_back_gap;
-
-            seg2_dist[0]=pitch;
-            seg2_dist[1]=throttle;
-            seg2_dist[2]=roll;
-            double flying_time = distance / sqrt(roll * roll + pitch * pitch + throttle*throttle);
-            double first_fly_time = flying_time * 1000;
-            totalflytime += first_fly_time;
-            showToast(String.format("X: %.3f,  Y: %.3f,  Z: %.3f,  T: %.3f",roll,pitch,throttle,flying_time));
-            Log.i("flying", String.format("x: %f, y: %f, z: %ff", right_left_gap, front_back_gap, up_down_gap));
-            Log.i("flying", String.format("forward: %f, horizontal: %f, up: %f, fly time: %f", roll, pitch, throttle, flying_time));
-
-            if (flying_time > 7) {
-                setZero();
-            } else {
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        setZero();
-                        showToast("AFter S2");
-                        GoForwardSequence();
-                    }
-                }, (long) first_fly_time);
-            }
-        }
-        else{
-            showToast("S2 evaded");
-        }
-    }
-
 
     public void GoForwardSequence() {
         Log.i("flydemo", "GoForwardSequence");
@@ -1218,180 +1073,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         }, (long) (2000));
 
 
-    }
-
-    public void GoBackSequence() {
-        pitch = (float) -back_pitch;
-        roll = (float) -back_roll;
-        Handler bhandler = new Handler();
-        bhandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast( "p "+back_pitch+" r "+back_roll+ "  t "+ back_first_fly_time);
-                SetDown(1,1);
-            }
-        },  (long)back_first_fly_time);
-    }
-
-    public void TwoDAruco(double right_left_gap, double front_back_gap, double up_down_gap, double yaw) {
-        flightController.setVirtualStickModeEnabled(true, djiError -> {
-            flightController.setVirtualStickAdvancedModeEnabled(true);
-            if (djiError != null) {
-                ToastUtils.setResultToToast(djiError.getDescription());
-            }
-        });
-        flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
-        flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-        flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
-        flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
-
-
-
-        double front_back_gap_goback = front_back_gap;
-        front_back_gap -= 1; //1 meter in front of aruco
-
-        //up_down_gap -=1;
-
-        //Getting distance for first approach (1m stand off)
-        double distance = sqrt(right_left_gap*right_left_gap + front_back_gap*front_back_gap);
-        float higher_speed = (float) max(abs(right_left_gap),abs(front_back_gap));
-
-        //Getting GoBack parametters
-        double distance_goback = sqrt(right_left_gap*right_left_gap + front_back_gap_goback*front_back_gap_goback);
-        float higher_speed_goback = (float) max(abs(right_left_gap),abs(front_back_gap_goback));
-        double roll_goback = front_back_gap_goback / (higher_speed_goback*2);
-        double pitch_goback = right_left_gap / (higher_speed_goback*2);
-        double flying_time_goback = distance_goback / sqrt(roll_goback*roll_goback + pitch_goback*pitch_goback);
-        back_first_fly_time = flying_time_goback*1000;
-        back_pitch= pitch_goback;
-        back_roll= roll_goback;
-        showToast(String.format("xxxx: %f, yyyyy: %f",back_roll,back_pitch));
-        back_throttle= 0;
-
-        if(abs(right_left_gap) <0.1 && abs(front_back_gap)<0.1) {
-
-        } //if the distance is too small, don't move
-        if(higher_speed>1){
-            roll = (float) front_back_gap/higher_speed;     //forward +  backwards -   MAX 15 From 8, overshoot
-            throttle = (float) up_down_gap/higher_speed;    //up      +  down      -   MAX 4 From 3, overshoot
-            pitch = (float) right_left_gap/higher_speed;    //right   +  left      -   MAX = 15    From 8, starts to overshoot
-
-
-        }else{
-            float basic_speed = 1;
-            roll =  basic_speed *(float) front_back_gap;
-            throttle = basic_speed *(float) up_down_gap;
-            pitch = basic_speed *(float) right_left_gap;
-        }
-
-        //reduce speed
-        roll /= 2;
-        throttle /= 2;
-        pitch /= 2;
-
-        showToast(String.format("x: %f, y: %f",roll,pitch));
-
-        double flying_time = distance /sqrt(roll*roll + pitch*pitch);
-        double first_fly_time= flying_time*1000;
-
-        Log.i("flying",String.format("x: %f, y: %f, z: %ff",right_left_gap,front_back_gap,up_down_gap));
-        Log.i("flying",String.format("forward: %f, horizontal: %f, up: %f, fly time: %f",roll,pitch,throttle,flying_time));
-
-        if (flying_time > 10) {
-            setZero();
-        } else {
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    setZero();
-                    GoForwardSequence();
-                }
-            }, (long) first_fly_time);
-        }
-    }
-
-    public void ContinousApproach (double right_left_gap, double front_back_gap, double up_down_gap) {
-
-
-        int x = 0,y=0,z=0,count=0,maxattempt;
-        maxattempt = 5;
-        while(true) {
-            try {
-                // Some Code
-                // break out of loop, or return, on success
-                if(right_left_gap>1){
-                    pitch = (float) 0.5;
-                    showToast("positive gap     pitch"+pitch);
-                }
-                if(right_left_gap<-1) {
-                    pitch = (float) -0.5;
-                    showToast("negative gap     pitch" + pitch);
-                }
-                if(-1<right_left_gap && right_left_gap < 1){
-                    pitch = 0;
-                    x = 1;
-                    showToast("negative gap     pitch" + pitch);
-                }
-//        if(abs(front_back_gap)>1){
-//            roll = (float) 0.5;
-//        }
-//        else{
-//            roll = 0;
-//            y = 1;
-//        }
-//        if(up_down_gap<-1){
-//            throttle = (float) -0.5;
-//        }
-//        else{
-//            throttle = 0;
-//            z = 1;
-//        }
-                if(x*y*z==0){
-
-                }
-                else {
-//                   as
-
-                }
-
-
-
-            } catch (Exception e) {
-                // handle exception
-                if (++count >= maxattempt) throw e;
-            }
-        }
-
-
-    }
-
-
-
-    public void SetUp(int speed, int delayms) {
-        throttle = (float) (speed);
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast("Up");
-
-            }
-        }, (long) delayms);
-    }
-
-    public void SetDown(int speed, int delayms) {
-        throttle = (float) (speed);
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast("Down");
-            }
-        }, (long) delayms);
     }
     //Todo : 移動到呼叫的地方
     public void SetYaw(int ang_speed, int delay_ms) {
@@ -1544,9 +1225,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
  * all data of the aruco marker
  */
 class ArucoCoordinate{
-    double x,y,z,yaw,pitch,roll;
+    float x,y,z,yaw,pitch,roll;
     int id;
-    ArucoCoordinate(double x, double y, double z, double yaw, double pitch, double roll, int id){
+    ArucoCoordinate(float x, float y, float z, float yaw, float pitch, float roll, int id){
         this.x = x;
         this.y = y;
         this.z = z;
@@ -1555,4 +1236,38 @@ class ArucoCoordinate{
         this.roll = roll;
         this.id = id;
     }
+    ArrayList<Float> x_list = new ArrayList<>(Collections.nCopies(10, null));
+    ArrayList<Float> y_list = new ArrayList<>(Collections.nCopies(10, null));
+    ArrayList<Float> z_list = new ArrayList<>(Collections.nCopies(10, null));
+    ArrayList<Float> yaw_list = new ArrayList<>(Collections.nCopies(10, null));
+    ArrayList<Float> pitch_list = new ArrayList<>(Collections.nCopies(10, null));
+    ArrayList<Float> roll_list = new ArrayList<>(Collections.nCopies(10, null));
+    /*
+    update the coordinate of the aruco marker
+     */
+    public void updateAruco(float x, float y, float z, float yaw, float pitch, float roll){
+        this.x =newListMedian(x_list,x);
+        this.y =newListMedian(y_list,y);
+        this.z =newListMedian(z_list,z);
+        this.yaw =newListMedian(yaw_list,yaw);
+        this.pitch =newListMedian(pitch_list,pitch);
+        this.roll =newListMedian(roll_list,roll);
+    }
+    /*
+    get the median of the data in the new list
+     */
+    private float newListMedian(ArrayList<Float> list, float data) {
+        list.add(data);
+        list.remove(0); //add and remove the data, make the new list always have 10 data
+        //remove the null data
+        list = new ArrayList<>(list); // copy the list
+        list.removeAll(Collections.singleton(null));
+        Collections.sort(list);
+        if (list.size() % 2 == 0) {
+            return (list.get(list.size() / 2) + list.get(list.size() / 2 - 1)) / 2;
+        } else {
+            return list.get(list.size() / 2);
+        }
+    }
+
 }

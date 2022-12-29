@@ -42,12 +42,25 @@ public class FlightControlMethod {
     /*                                main activity                               */
     /* -------------------------------------------------------------------------- */
 
+    public void goToArucoMarker(int aruco_id){
+        if(emg_now) return;
+//        ArucoCoordinate goal_aruco = findAruco(aruco_id);
+//        if(goal_aruco==null) return;
+//        moveTo(goal_aruco.x, goal_aruco.z - 2, -goal_aruco.y+1, goal_aruco.yaw);
+        ArucoCoordinate goal_aruco = findAruco(aruco_id);
+        normalizeForwardAngle(goal_aruco);
+    }
+    public void emergency(){
+        emg_now = !emg_now;
+        setZero();
+    }
     /**
      * Find the specified id in the list
      * @param aruco_id : the id you want to find,type: int
      * @return : if found it return aruco coordinate, else return null, type: ArucoCoordinate
      */
     public ArucoCoordinate findAruco(int aruco_id){
+        if(emg_now) return null;
         function_times = 0;
         while (true){
             if (arucoCoordinateList == null) {
@@ -67,6 +80,23 @@ public class FlightControlMethod {
             //if not found, keep searching
             SystemClock.sleep(1000);
         }
+    }
+    void normalizeForwardAngle(ArucoCoordinate aruco){
+        if(emg_now) return;
+        //degree to radian
+        float radian = (float) (aruco.pitch * Math.PI / 180);
+        float radius = aruco.z;
+        float arc_length = radius * radian;
+        Log.i("normalizeForwardAngle", "arc_length: " + arc_length);
+        float time = arc_length / 0.1f; // 1m/s, can be changed, unit: second
+        Log.i("normalizeForwardAngle", "time: " + time);
+        //set the speed
+        pitch = 0.1f;
+        yaw = aruco.pitch/time;
+        Log.i("normalizeForwardAngle", "yaw: " + yaw);
+        //set the time
+        SystemClock.sleep((long) time*1000);
+        setZero();
 
     }
     /**
@@ -93,6 +123,7 @@ public class FlightControlMethod {
     /*                            functional function                             */
     /* -------------------------------------------------------------------------- */
     public void moveTo(double right_left_gap, double front_back_gap, double up_down_gap, double yaw) {
+        if(emg_now) return;
         flightController.setVirtualStickModeEnabled(true, djiError -> {
             flightController.setVirtualStickAdvancedModeEnabled(true);
             if (djiError != null) {
@@ -136,7 +167,7 @@ public class FlightControlMethod {
             setZero();
         }
     }
-    private void setZero(){
+    public void setZero(){
         pitch = (float)0.0;
         roll = (float) 0.0;
         throttle = (float)0.0;
