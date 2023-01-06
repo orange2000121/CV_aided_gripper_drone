@@ -1,23 +1,19 @@
 package com.dji.activationDemo;
-
-
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.sqrt;
-
-import android.nfc.Tag;
-import android.os.Handler;
-import android.os.SystemClock;
-import android.util.Log;
-
-
-import java.util.List;
-
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
 import dji.common.flightcontroller.virtualstick.VerticalControlMode;
 import dji.common.flightcontroller.virtualstick.YawControlMode;
 import dji.sdk.flightcontroller.FlightController;
+
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.sqrt;
+
+import android.os.SystemClock;
+
+import android.util.Log;
+import java.util.List;
+
 
 public class FlightControlMethod {
     public float roll, pitch, throttle, yaw;// control the drone flying
@@ -26,8 +22,13 @@ public class FlightControlMethod {
     public List<ArucoCoordinate> arucoCoordinateList=null; //current aruco coordinate list
     private FlightController flightController; //flight controller from dji sdk
     public int function_times = 0;
-    /* ------------------------------- structure ------------------------------- */
+    /* ------------------------------- Constructive ------------------------------- */
     public FlightControlMethod(){}
+
+    /**
+     * @param flightController : flight controller from dji sdk
+     * @return : if register successfully, return true, else return false
+     */
     public boolean register(FlightController flightController){
         if(flightController==null) return false;
         this.flightController = flightController;
@@ -42,12 +43,41 @@ public class FlightControlMethod {
     /*                                main activity                               */
     /* -------------------------------------------------------------------------- */
 
+    public void test1(){
+        //測試旋轉到正前方
+        if(emg_now) return;
+        ArucoCoordinate goal = findAruco(23);
+        if(goal==null) return;
+        moveTo(goal.x, goal.z-1, -goal.y+1);
+        goal = findAruco(23);
+        normalizeForwardAngle(goal);
+    }
+    public void test2(){
+        //測試到第一個標籤拿起物品，再飛到第二個標籤前方一公尺，放下物品。
+        if(emg_now) return;
+        ArucoCoordinate goal = findAruco(23);
+        if(goal==null) return;
+        moveTo(goal.x, goal.z-1, -goal.y+0.75);
+        goal = findAruco(23);
+        normalizeForwardAngle(goal);
+        moveTo(0,1,0);
+        moveTo(0,0,0.5);
+        goal = findAruco(15);
+        if(goal==null) return;
+        moveTo(goal.x, goal.z-1, -goal.y+1);
+        goal = findAruco(15);
+        normalizeForwardAngle(goal);
+        moveTo(0,0,-0.5);
+        moveTo(0,-0.5,0);
+        flightController.startLanding((error)-> {});
+    }
+
     public void goToArucoMarker(int aruco_id){
         if(emg_now) return;
-//        ArucoCoordinate goal_aruco = findAruco(aruco_id);
-//        if(goal_aruco==null) return;
-//        moveTo(goal_aruco.x, goal_aruco.z - 2, -goal_aruco.y+1, goal_aruco.yaw);
         ArucoCoordinate goal_aruco = findAruco(aruco_id);
+        if(goal_aruco==null) return;
+        moveTo(goal_aruco.x, goal_aruco.z - 2, -goal_aruco.y+1);
+        goal_aruco = findAruco(aruco_id);
         if(goal_aruco==null){
             Log.e(TAG, "goToArucoMarker: goal_aruco==null");
             return;
@@ -70,7 +100,7 @@ public class FlightControlMethod {
             if (arucoCoordinateList == null) {
                 Log.w(TAG,"Didn't register aruco list");
                 return null;
-            };
+            }
             if (function_times >100) return null;
             function_times++;
             yaw = 5;// can be changed
@@ -87,7 +117,8 @@ public class FlightControlMethod {
     }
 
     /**
-     * 假設aruco marker在正前方，aruco.pitch當作旋轉的角度，aruco.z當作旋轉半徑。<br/>
+     * aruco marker必須在正前方，Roll 必須為零
+     * aruco.pitch當作旋轉的角度，aruco.z當作旋轉半徑。<br/>
      * 旋轉到aruco marker的正前方。<br/>
      * @param aruco : the aruco marker you want to rotate to
      */
@@ -190,7 +221,6 @@ public class FlightControlMethod {
         roll = (float) 0.0;
         throttle = (float)0.0;
         yaw = (float)(0.0);
-
     }
 
 }

@@ -358,7 +358,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         ArucoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 EnableVirtualStick.performClick();
                 TakeOffBtn.performClick();
                 flight_thread = new Thread(()->{
@@ -539,7 +538,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             Writer writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
             String s = writer.toString();
-//            showToast(s);
         }
 
         MediaScannerConnection.scanFile(this, new String[] { file.toString() }, null,
@@ -1003,77 +1001,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         }
     }
 
-    public void GoForwardSequence() {
-        Log.i("flydemo", "GoForwardSequence");
-        EnableVirtualStick.performClick();
-        roll=(float).75;
-        throttle = (float)0.5;
-        double time_s= 1000;
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                flight.function_times = 0;
-                flight.findAruco(23);
-//                BackafterS2();
-                //GoBackNew();
-            }
-        }, (long) (time_s));
-
-        double zdist= roll*time_s;
-        double ydist= throttle*time_s;
-        seg3_dist[1] = ydist;
-        seg3_dist[2]=  zdist;
-
-        seg1_dist[1]+=ydist;
-        seg1_dist[2]+=zdist;
-        totalflytime += time_s;
-    }
-    public void BackafterS2() {
-        EnableVirtualStick.performClick();
-        roll=-(float)0.7;
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast("Backward");
-                LandBtn.performClick();
-            }
-        }, (long) (3000));
-
-
-//        roll = (float) (-1);
-//        Handler handler = new Handler();
-//        handler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                setZero();
-//                showToast("Backward");
-//            }
-//        },(long) 2000 );
-
-    }
-
-    public void GoBackNew() {
-        String data = String.format("X: %.3f,  Y: %.3f,  Z: %.3f,  T: %.3f",seg1_dist[0],seg1_dist[1],seg1_dist[2],totalflytime);
-//        data.concat(String.format("\n   X: %.3f,  Y: %.3f,  Z: %.3f,  T: %.3f",seg2_dist[0],seg2_dist[1],seg2_dist[2],totalflytime));
-//        data.concat(String.format(  "\n     X: %.3f,  Y: %.3f,  Z: %.3f,  T: %.3f",seg3_dist[0],seg3_dist[1],seg3_dist[2],totalflytime+"\n"));
-
-        double totxdist = seg1_dist[0];
-        double totydist = seg1_dist[1];
-        double totzdist = seg1_dist[2];
-        showToast("x: "+totxdist+"  y: "+totydist+" z: "+totzdist+"  t: "+totalflytime);
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                writeToFile(data,OldFeederView.this);
-
-            }
-        }, (long) (2000));
-
-
-    }
     //Todo : 移動到呼叫的地方
     public void SetYaw(int ang_speed, int delay_ms) {
         yaw = (float) (ang_speed);
@@ -1086,53 +1013,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         }, (long) delay_ms);
     }
-    public void SetForward(double speed, int delay_ms) {
-        roll = (float) (speed);
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast("Forward");
-            }
-        },(long) delay_ms );
-    }
-    //Todo : remove unused functions
-    public void SetBackward(int speed, int delay_ms) {
-        roll = (float) (-speed);
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast("Backward");
-            }
-        },(long) delay_ms );
-    }
-    //Todo : remove unused functions
-    public void SetRight(int speed, int delay_ms) {
-        pitch = (float) (speed);
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast("Right");
-            }
-        },(long) delay_ms );
-    }
-    public void SetLeft(double speed, int delay_ms) {
-        pitch = (float) (-speed);
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setZero();
-                showToast("Left");
-            }
-        },(long) delay_ms );
-    }
-
     public void setZero(){
         pitch = (float)0.0;
         roll = (float) 0.0;
@@ -1141,17 +1021,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         showToast("STOP");
 
     }
-    private void writeToFile(String data, Context context) {
-        try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("config.txt", Context.MODE_PRIVATE));
-            outputStreamWriter.write(data);
-            outputStreamWriter.close();
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-    }
-
     public void SetLEDs(int t){
         flightController.setLEDsEnabledSettings(LEDsSettings.generateLEDsEnabledSettings(t), new CommonCallbacks.CompletionCallback() {
             // Legend
