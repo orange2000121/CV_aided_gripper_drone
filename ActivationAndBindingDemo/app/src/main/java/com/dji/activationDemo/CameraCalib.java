@@ -565,16 +565,16 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
             theTextView6.setTextColor(Color.BLUE);
 
         }
-//
-//        float current = System.currentTimeMillis();
-//        deltatime += current - previous;
-////        showToast(String.valueOf(deltatime));131072*200
-//        if(deltatime>1000){
+
+        float current = System.currentTimeMillis();
+        deltatime += current - previous;
+//        showToast(String.valueOf(deltatime));131072*200
+        if(deltatime>250){
 //            Toast.makeText(this, "differencia"+deltatime,Toast.LENGTH_SHORT).show();
-//            saveImageToExternalStorage(BitmapFromFeedersSurface);
-//
-//        }
-//        previous = current;
+            saveImageToExternalStorage(BitmapFromFeedersSurface);
+
+            previous = current;
+        }
 
 
         Bitmap DisplayBitmap = Bitmap.createBitmap(RGBmatFromBitmap.cols(),RGBmatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
