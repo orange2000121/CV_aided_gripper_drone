@@ -149,7 +149,7 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
     }
     public void saveImageToExternalStorage(Bitmap finalBitmap) {
         String root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
-        File myDir = new File(root + "/CameraCalib");
+        File myDir = new File(root + "/CameraCalib1");
         myDir.mkdirs();
         Random generator = new Random();
         int n = 10000;
@@ -569,7 +569,7 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
         float current = System.currentTimeMillis();
         deltatime += current - previous;
 //        showToast(String.valueOf(deltatime));131072*200
-        if(deltatime>250){
+        if(deltatime>300){
 //            Toast.makeText(this, "differencia"+deltatime,Toast.LENGTH_SHORT).show();
             saveImageToExternalStorage(BitmapFromFeedersSurface);
 

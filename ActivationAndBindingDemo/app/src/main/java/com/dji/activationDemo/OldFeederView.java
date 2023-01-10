@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.calib3d.Calib3d;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -452,12 +453,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
         //set shadow color of the emergency button
-        if(flight.emg_now){
-            EmergencyBtn.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
-        }
-        else {
-            EmergencyBtn.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
-        }
+        if(flight.emg_now){EmergencyBtn.setBackgroundTintList(ColorStateList.valueOf(Color.RED));}
+        else {EmergencyBtn.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));}
         BitmapFromFeedersSurface = Bitmap.createScaledBitmap(
                 mVideoTexture.getBitmap(),
                 arucoMethod.pic_width,

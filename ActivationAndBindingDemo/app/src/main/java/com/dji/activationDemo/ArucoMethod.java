@@ -3,9 +3,8 @@ package com.dji.activationDemo;
 import static java.lang.Math.abs;
 
 import android.graphics.Bitmap;
-import android.view.TextureView;
-import android.widget.ImageView;
 
+import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.aruco.Aruco;
 import org.opencv.aruco.DetectorParameters;
@@ -27,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import dji.sdk.codec.DJICodecManager;
 
 public class ArucoMethod {
     /* ----------------------------- public variable ----------------------------- */
@@ -37,32 +35,29 @@ public class ArucoMethod {
     /* ---------------------------- construct variable --------------------------- */
 
     /* ----------------------------- private variable ---------------------------- */
-    private final Mat cameraMatrix, distCoeffs; //camera matrix and distortion coefficients
+    public Mat cameraMatrix, distCoeffs;//camera matrix and distortion coefficients
 
     /* -------------------------------------------------------------------------- */
     /*                                 constructor                                */
     /* -------------------------------------------------------------------------- */
     /**
-     *
+     * initialize camera matrix and distortion coefficients
      */
     ArucoMethod() {
-
-
+        OpenCVLoader.initDebug();
         /* --------------------------- camera calibration --------------------------- */
         cameraMatrix = Mat.zeros(3, 3, CvType.CV_64FC1);
-        cameraMatrix.put(0, 0, 1.04684127e+04);
-        cameraMatrix.put(0, 2, 2.63521851e+02);
-        cameraMatrix.put(1, 1, 2.00261655e+03);
-        cameraMatrix.put(1, 2, 4.26607884e+02);
+        cameraMatrix.put(0, 0, 529.66735352);
+        cameraMatrix.put(0, 2, 643.64118485);
+        cameraMatrix.put(1, 1, 527.90085357);
+        cameraMatrix.put(1, 2, 482.21164092);
         cameraMatrix.put(2, 2, 1.00000000e+00);
         distCoeffs = Mat.zeros(1, 5, CvType.CV_64FC1);
-        distCoeffs.put(0, 0, -4.45570616e+01);
-        distCoeffs.put(0, 1, 1.31191515e+03);
-        distCoeffs.put(0, 2, 4.35193893e-02);
-        distCoeffs.put(0, 3, 3.20318152e-01);
-        distCoeffs.put(0, 4, -1.10050623e+04);
-
-
+        distCoeffs.put(0, 0, -0.13242401);
+        distCoeffs.put(0, 1, 0.00586409);
+        distCoeffs.put(0, 2, 0.00050706);
+        distCoeffs.put(0, 3, 0.00138085);
+        distCoeffs.put(0, 4, 0.00189516);
     }
     /* -------------------------------------------------------------------------- */
     /*                                  Functions                                 */
@@ -171,6 +166,7 @@ public class ArucoMethod {
                 current_arucos.add(new ArucoCoordinate((float) aruco_translation_vector[0], (float) aruco_translation_vector[1], (float) aruco_translation_vector[2], (float) aruco_roll, (float) aruco_pitch, (float) aruco_yaw, (int) ids.get(i, 0)[0]));
 
                 MatOfPoint2f projected = new MatOfPoint2f();
+                distCoeffs = new MatOfDouble(distCoeffs);
 
                 Calib3d.projectPoints(m_corners, rvecs.row(i), tvecs.row(i), cameraMatrix, (MatOfDouble) distCoeffs, projected);
 
@@ -190,9 +186,11 @@ public class ArucoMethod {
         }
         //Bitmap DisplayBitmap = Bitmap.createBitmap(RGBMatFromBitmap.cols(),RGBMatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
         Bitmap DisplayBitmap = Bitmap.createBitmap(pic_width, pic_height, Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(RGBMatFromBitmap, DisplayBitmap);
-//        mImageSurface.setImageBitmap(null);
-//        mImageSurface.setImageBitmap(DisplayBitmap);
+        Mat displayMat = new Mat();
+        Calib3d.undistort(RGBMatFromBitmap, displayMat, cameraMatrix, distCoeffs);
+//        Utils.matToBitmap(RGBMatFromBitmap, DisplayBitmap);
+        Utils.matToBitmap(displayMat, DisplayBitmap);
+
         return DisplayBitmap;
     }
 
