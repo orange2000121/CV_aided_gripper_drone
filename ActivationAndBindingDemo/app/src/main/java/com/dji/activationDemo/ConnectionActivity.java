@@ -299,4 +299,5 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             }
         });
     }
+
 }

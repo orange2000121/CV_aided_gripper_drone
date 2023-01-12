@@ -25,6 +25,7 @@ import static com.dji.activationDemo.ToastUtils.showToast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.math.MathUtils;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -78,6 +79,7 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
     private Dictionary dictionary;
     private DetectorParameters parameters;
     private int STORAGE_PERMISSION_CODE= 1;
+    double[] dannyisgoinghome = {0,0,0};
     Date startDate=null;
 
     double zapato = 323.37471;
@@ -427,6 +429,9 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
                 Calib3d.drawFrameAxes(RGBmatFromBitmap, cameraMatrix, distCoeffs, rvecs.row(i), tvecs.row(i), 0.13f);
                 Mat arucorotationmat = new Mat(3,3,6);
                 Calib3d.Rodrigues (rvecs.row(i), arucorotationmat);
+
+                dannyisgoinghome = MatrixToYawPitchRoll(arucorotationmat);
+
                 Mat cameraMatrixAruco = new Mat();
                 Mat rotMatrixAru = new Mat();
                 Mat transVectAru = new Mat();
@@ -551,9 +556,9 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
             TextView theTextView4 = (TextView) findViewById(R.id.textView4);
             TextView theTextView5 = (TextView) findViewById(R.id.textView5);
             TextView theTextView6 = (TextView) findViewById(R.id.textView6);
-            theTextView1.setText("X: " + String.format("%.4f", arucotranslationvector[0])  + " ,  ");
-            theTextView2.setText("Y: " + String.format("%.4f", arucotranslationvector[1])  + " ,  ");
-            theTextView3.setText("Z: " + String.format("%.4f", arucotranslationvector[2])  + " ,  ");
+            theTextView1.setText("X: " + String.format("%.4f", dannyisgoinghome[0])  + " ,  ");
+            theTextView2.setText("Y: " + String.format("%.4f", dannyisgoinghome[1])  + " ,  ");
+            theTextView3.setText("Z: " + String.format("%.4f", dannyisgoinghome[2])  + " ,  ");
             theTextView4.setText("Yaw: " + String.format("%.4f", arucoyaw)  + " ,  ");
             theTextView5.setText("Roll: " + String.format("%.4f", arucoroll)  + " ,  ");
             theTextView6.setText("Pitch: " + String.format("%.4f", arucopitch)  + " ,  ");
@@ -582,5 +587,40 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
         mImageSurface.setImageBitmap(null);
         mImageSurface.setImageBitmap(DisplayBitmap);
     }
+    public double[] MatrixToYawPitchRoll( Mat A )
+    {
+//        Log.i("TAG", "MatrixToYawPitchRoll: " + A.dump());
+        double[] angle = new double[3];
+        angle[1] = -Math.asin( A.get(2,0)[0] )*57.2957795;  //Pitch
 
+        //Gymbal lock: pitch = -90
+        if( A.get(2,0)[0]   == 1 ){
+            angle[0] = 0.0;             //yaw = 0
+            angle[2] = Math.atan2( -A.get(0,1)[0], -A.get(0,2)[0] )* 57.2957795;
+
+            }
+
+
+            //Roll
+//            System.out.println("Gimbal lock: pitch = -90");
+
+
+
+        //Gymbal lock: pitch = 90
+        else if( A.get(2,0)[0] == -1 ){
+            angle[0] = 0.0;             //yaw = 0
+            angle[2] = Math.atan2( A.get(0,1)[0], A.get(0,2)[0] )* 57.2957795;
+//Roll
+//            System.out.println("Gimbal lock: pitch = 90");
+        }
+        //General solution
+        else{
+            angle[0] = Math.atan2(  A.get(1,0)[0], A.get(0,0)[0] )* 57.2957795;
+            angle[2] = Math.atan2(  A.get(2,1)[0], A.get(2,2)[0] )* 57.2957795;
+
+
+//            System.out.println("No gimbal lock");
+        }
+        return angle;   //Euler angles in order yaw, pitch, roll
+    }
 }
