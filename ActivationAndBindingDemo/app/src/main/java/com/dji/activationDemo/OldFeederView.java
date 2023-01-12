@@ -38,6 +38,7 @@ import java.util.TimerTask;
 
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.LEDsSettings;
+import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
@@ -107,6 +108,20 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             if (ModuleVerificationUtil.isFlightControllerAvailable()) {
                 flightController = DemoApplication.getAircraftInstance().getFlightController();
                 flightAssistant = flightController.getFlightAssistant();
+                assert flightAssistant != null;
+                //todo: 完成測量到地面距離
+//                flightAssistant.setToFPerceptionInformationCallback(new CommonCallbacks.CompletionCallbackWith<PerceptionInformation>() {
+//                    @Override
+//                    public void onSuccess(PerceptionInformation perceptionInformation) {
+//                        int down_distance = perceptionInformation.getDownwardObstacleDistance();
+//                        Log.i(TAG, "Downward distance: " + down_distance);
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
             }
         }
         flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
@@ -115,8 +130,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
         // Turn on the avoidance system
-        flightAssistant.setLandingProtectionEnabled(true,null);
-        flightAssistant.setCollisionAvoidanceEnabled(true, null);
+        flightAssistant.setLandingProtectionEnabled(false,null);
+        flightAssistant.setCollisionAvoidanceEnabled(false, null);
     }
 
     @Override
@@ -129,6 +144,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         FlightController flightController = ModuleVerificationUtil.getFlightController();
         flight.register(flightController);
         flight.register(arucoMethod.current_arucos);
+        flight.setFlightMode("VELOCITY");
         if (flightController == null) {
             return;
         }
@@ -173,16 +189,18 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             flight.moveTo(0,-2,0);
         });
         RightBtn.setOnClickListener(v -> {
-            flight.moveTo(2,0,0);
+            flight.moveTo(1,0,0);
         });
         LeftBtn.setOnClickListener(v -> {
-            flight.moveTo(-2,0,0);
+            flight.moveTo(-1,0,0);
         });
         UpBtn.setOnClickListener(v -> {
-            flight.moveTo(0,0,2);
+            showToast("Up");
+            flight.moveTo(0,0,0.5);
         });
         DownBtn.setOnClickListener(v -> {
-            flight.moveTo(0,0,-2);
+            showToast("Down");
+            flight.moveTo(0,0,-.5);
         });
         ArucoBtn.setOnClickListener(v -> {
             EnableVirtualStick.performClick();
@@ -211,7 +229,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
         MoveTo.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.goToArucoMarker(23);
+                flight.test1();
             });
             flight_thread.start();
         });

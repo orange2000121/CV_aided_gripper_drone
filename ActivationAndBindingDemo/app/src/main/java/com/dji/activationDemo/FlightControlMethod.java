@@ -1,4 +1,6 @@
 package com.dji.activationDemo;
+import static com.dji.activationDemo.ToastUtils.showToast;
+
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
 import dji.common.flightcontroller.virtualstick.VerticalControlMode;
@@ -44,33 +46,37 @@ public class FlightControlMethod {
     /* -------------------------------------------------------------------------- */
 
     public void test1(){
-        //測試旋轉到正前方
         if(emg_now) return;
+        //---------go to first aruco
         ArucoCoordinate goal = findAruco(23);
         if(goal==null) return;
-        moveTo(goal.x, goal.z-1, -goal.y+1);
+        moveTo(goal.x, goal.z-1.5, -goal.y+1.2);
         goal = findAruco(23);
-        normalizeForwardAngle(goal);
+        facingTheFront(goal);
+        goal = findAruco(23);
+        moveTo(goal.x, goal.z-0.25, -goal.y+1.2);
+        //-----grip
+        moveTo(0,0, -0.53); //move down to grip
+        SystemClock.sleep(3000);
+        moveTo(0,0, 0.53); //move up to take off
+        //---------go to second aruco
+        goal = findAruco(31);
+        if(goal==null) return;
+        facingTheFront(goal);
+        SystemClock.sleep(500);
+        goal = findAruco(31);
+        moveTo(goal.x*0.8, goal.z-1.7, -goal.y+1);
+        goal = findAruco(31);
+        moveTo(goal.x, goal.z -1.5, -goal.y+1);
+        goal = findAruco(31);
+        facingTheFront(goal);
+        goal = findAruco(31);
+        moveTo(goal.x, goal.z -1.2, -goal.y+1);
     }
     public void test2(){
-        //測試到第一個標籤拿起物品，再飛到第二個標籤前方一公尺，放下物品。
-        if(emg_now) return;
-        ArucoCoordinate goal = findAruco(23);
-        if(goal==null) return;
-        moveTo(goal.x, goal.z-1, -goal.y+0.75);
-        goal = findAruco(23);
-        normalizeForwardAngle(goal);
-        moveTo(0,1,0);
-        moveTo(0,0,0.5);
-        goal = findAruco(15);
-        if(goal==null) return;
-        moveTo(goal.x, goal.z-1, -goal.y+1);
-        goal = findAruco(15);
-        normalizeForwardAngle(goal);
-        moveTo(0,0,-0.5);
-        moveTo(0,-0.5,0);
-        flightController.startLanding((error)-> {});
+
     }
+
 
     public void goToArucoMarker(int aruco_id){
         if(emg_now) return;
@@ -87,6 +93,14 @@ public class FlightControlMethod {
     public void emergency(){
         emg_now = !emg_now;
         setZero();
+        flightController.setVirtualStickModeEnabled(false, djiError -> {
+            flightController.setVirtualStickAdvancedModeEnabled(true);
+            if (djiError != null) {
+                ToastUtils.setResultToToast(djiError.getDescription());
+            } else {
+                showToast("VS Disabled");
+            }
+        });
     }
     /**
      * Find the specified id in the list
@@ -97,13 +111,14 @@ public class FlightControlMethod {
         if(emg_now) return null;
         function_times = 0;
         while (true){
+            if(emg_now) return null;
             if (arucoCoordinateList == null) {
                 Log.w(TAG,"Didn't register aruco list");
                 return null;
             }
             if (function_times >100) return null;
             function_times++;
-            yaw = 5;// can be changed
+            yaw = 10;// can be changed
             //determine the aruco is in the list
             for(ArucoCoordinate arucoCoordinate : arucoCoordinateList){
                 if(arucoCoordinate.id == aruco_id){
@@ -124,6 +139,10 @@ public class FlightControlMethod {
      */
     void normalizeForwardAngle(ArucoCoordinate aruco){
         if(emg_now) return;
+        if(aruco.roll<=-15 || aruco.roll>=15){
+            Log.e(TAG, "normalizeForwardAngle: aruco.roll is not zero");
+            return;
+        }
         //degree to radian
         float radian = (float) (aruco.pitch * Math.PI / 180);
         float radius = aruco.z;
@@ -140,8 +159,70 @@ public class FlightControlMethod {
         //set the time
         SystemClock.sleep((long) time*1000);
         setZero();
+    }
+
+    private void facingAndMoveTo(double right_left_gap, double front_back_gap, double up_down_gap, ArucoCoordinate aruco){
+        if (emg_now) return;
+        if (aruco.roll <= -15 || aruco.roll >= 15) {
+            Log.e(TAG, "normalizeForwardAngle: aruco.roll is not zero");
+            return;
+        }
+        double distance = sqrt(right_left_gap * right_left_gap + front_back_gap * front_back_gap + up_down_gap * up_down_gap);
+        float higher_speed = (float) max(abs(right_left_gap),max(abs(front_back_gap), abs(up_down_gap)) );
+
+        if (higher_speed > 1) {
+            /*
+             * Make the max speed of the drone is 1m/s
+             * Calculate speed proportional to distance
+             */
+            roll = (float) front_back_gap / higher_speed;
+            throttle = (float) up_down_gap / higher_speed;
+            pitch = (float) right_left_gap / higher_speed;
+        } else {
+            /*
+             * If the distance is less than 1 meter, the speed is proportional to distance
+             */
+            float basic_speed = 1;
+            roll = basic_speed * (float) front_back_gap;
+            throttle = basic_speed * (float) up_down_gap;
+            pitch = basic_speed * (float) right_left_gap;
+        }
+
+        /*
+         * Reduce the speed of the drone
+         */
+        roll /= 2;
+        pitch /= 2;
+        throttle /= 2;
+        Log.i(TAG, "roll: " + roll);
+        Log.i(TAG, "pitch: " + pitch);
+        Log.i(TAG, "throttle: " + throttle);
+        double flying_time = distance / sqrt(roll * roll + pitch * pitch + throttle * throttle);
+
+        yaw = (float) (aruco.pitch / flying_time);
+
+        if (flying_time > 10) {// if the flying time is too long, don't move
+            setZero();
+        } else {
+            SystemClock.sleep((long) (flying_time * 1000));// when the drone is moving, wait for the drone to move
+            setZero();
+        }
+
 
     }
+
+    private void facingTheFront(ArucoCoordinate aruco){
+        if (emg_now) return;
+        if (aruco.roll <= -15 || aruco.roll >= 15) {
+            Log.e(TAG, "normalizeForwardAngle: aruco.roll is not zero");
+            return;
+        }
+        float rotation_speed = 10;
+        float time = abs(aruco.pitch / rotation_speed);
+        yaw = aruco.pitch < 0 ? -rotation_speed : rotation_speed;
+        SystemClock.sleep((long) time * 1000);
+    }
+
     /**
      * Change the yaw control mode velocity or angle
      * @param mode : "VELOCITY" or "ANGLE", type: String
@@ -173,16 +254,15 @@ public class FlightControlMethod {
      */
     public void moveTo(double right_left_gap, double front_back_gap, double up_down_gap) {
         if(emg_now) return;
-        flightController.setVirtualStickModeEnabled(true, djiError -> {
-            flightController.setVirtualStickAdvancedModeEnabled(true);
-            if (djiError != null) {
-                ToastUtils.setResultToToast(djiError.getDescription());
-            }
-        });
-        double distance = sqrt(right_left_gap * right_left_gap + front_back_gap * front_back_gap);
-        float higher_speed = (float) max(abs(right_left_gap), abs(front_back_gap));
-
-        if (abs(right_left_gap) < 0.1 && abs(front_back_gap) < 0.1) return; // if the distance is too small, don't move
+        // todo: 確認這段註解是否要保留
+//        flightController.setVirtualStickModeEnabled(true, djiError -> {
+//            flightController.setVirtualStickAdvancedModeEnabled(true);
+//            if (djiError != null) {
+//                ToastUtils.setResultToToast(djiError.getDescription());
+//            }
+//        });
+        double distance = sqrt(right_left_gap * right_left_gap + front_back_gap * front_back_gap + up_down_gap * up_down_gap);
+        float higher_speed = (float) max(abs(right_left_gap),max(abs(front_back_gap), abs(up_down_gap)) );
 
         if (higher_speed > 1) {
             /*
@@ -206,9 +286,12 @@ public class FlightControlMethod {
         * Reduce the speed of the drone
         */
         roll /= 2;
-        throttle /= 2;
         pitch /= 2;
-        double flying_time = distance / sqrt(roll * roll + pitch * pitch);
+        throttle /= 2;
+        Log.i(TAG, "roll: " + roll);
+        Log.i(TAG, "pitch: " + pitch);
+        Log.i(TAG, "throttle: " + throttle);
+        double flying_time = distance / sqrt(roll * roll + pitch * pitch + throttle * throttle);
         if (flying_time > 10) {// if the flying time is too long, don't move
             setZero();
         } else {

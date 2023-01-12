@@ -152,20 +152,13 @@ public class ArucoMethod {
                 double aruco_roll = arucoEulerAngles.get(0, 0)[0];  //for debugging, printing on screen
                 double aruco_pitch = arucoEulerAngles.get(1, 0)[0];
                 double aruco_yaw = -arucoEulerAngles.get(2, 0)[0];// change sign to get the rotation needed by the drone not the paper
-                //Add the aruco to the currently detected aruco
-                /*
-                 * todo: check why need change z-axis distance
-                 * Correct the z-axis distance
-                 */
-                if (abs(aruco_translation_vector[0]) < 0.65) {
-                    aruco_translation_vector[2] = (aruco_translation_vector[2] - .03);
-                } else {
-                    aruco_translation_vector[2] = (aruco_translation_vector[2] - .03) - (abs(aruco_translation_vector[0]) * 0.09);
-                }
+                //set the aruco offset
+                aruco_translation_vector[0] -= 0.03;
 
                 current_arucos.add(new ArucoCoordinate((float) aruco_translation_vector[0], (float) aruco_translation_vector[1], (float) aruco_translation_vector[2], (float) aruco_roll, (float) aruco_pitch, (float) aruco_yaw, (int) ids.get(i, 0)[0]));
 
                 MatOfPoint2f projected = new MatOfPoint2f();
+
                 distCoeffs = new MatOfDouble(distCoeffs);
 
                 Calib3d.projectPoints(m_corners, rvecs.row(i), tvecs.row(i), cameraMatrix, (MatOfDouble) distCoeffs, projected);
@@ -186,10 +179,10 @@ public class ArucoMethod {
         }
         //Bitmap DisplayBitmap = Bitmap.createBitmap(RGBMatFromBitmap.cols(),RGBMatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
         Bitmap DisplayBitmap = Bitmap.createBitmap(pic_width, pic_height, Bitmap.Config.ARGB_8888);
-        Mat displayMat = new Mat();
-        Calib3d.undistort(RGBMatFromBitmap, displayMat, cameraMatrix, distCoeffs);
-//        Utils.matToBitmap(RGBMatFromBitmap, DisplayBitmap);
-        Utils.matToBitmap(displayMat, DisplayBitmap);
+//        Mat displayMat = new Mat();
+//        Calib3d.undistort(RGBMatFromBitmap, displayMat, cameraMatrix, distCoeffs);
+        Utils.matToBitmap(RGBMatFromBitmap, DisplayBitmap);
+//        Utils.matToBitmap(displayMat, DisplayBitmap);
 
         return DisplayBitmap;
     }
