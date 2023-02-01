@@ -25,6 +25,7 @@ import static com.dji.activationDemo.ToastUtils.showToast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.math.MathUtils;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -78,6 +79,7 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
     private Dictionary dictionary;
     private DetectorParameters parameters;
     private int STORAGE_PERMISSION_CODE= 1;
+    double[] dannyisgoinghome = {0,0,0};
     Date startDate=null;
 
     double zapato = 323.37471;
@@ -149,7 +151,7 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
     }
     public void saveImageToExternalStorage(Bitmap finalBitmap) {
         String root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
-        File myDir = new File(root + "/CameraCalib");
+        File myDir = new File(root + "/CameraCalib1");
         myDir.mkdirs();
         Random generator = new Random();
         int n = 10000;
@@ -354,46 +356,27 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
             Mat rvec1 = new Mat();
             Mat tvec1 = new Mat();
 
-//            //  Test camera matrix
+
             Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F); //300 - 600
-            cameraMatrix.put(0, 0, 577.12265401-30); //fx
-            cameraMatrix.put(1, 1, 577.12265401-30); //fy
-            cameraMatrix.put(0, 2, 624.27619131); //cx
-            cameraMatrix.put(1, 2, 493.79682551); //cy
-            cameraMatrix.put(2, 2, 1);
-//            showToast(cameraMatrix.toString());
-
-            // Distorsion coefficients
+            cameraMatrix = Mat.zeros(3, 3, CvType.CV_64FC1);
+            cameraMatrix.put(0, 0, 556.86218075);
+            cameraMatrix.put(0, 2, 624.18715691);
+            cameraMatrix.put(1, 1, 556.86218075);
+            cameraMatrix.put(1, 2, 556.86218075);
+            cameraMatrix.put(2, 2, 1.00000000e+00);
             Mat distCoeffs = Mat.zeros(0, 1, CvType.CV_64F);
-            distCoeffs.put(0,0, -1.00067366e-01);
-            distCoeffs.put(1,0,-4.24388662e-02 );
-            distCoeffs.put(2,0,5.06785331e-05);
-            distCoeffs.put(3,0, -2.77194518e-03);
-            distCoeffs.put(4,0,  3.90751297e-01);
-//            distCoeffs.put(5,0,   1.76991593e-02 );
-//            distCoeffs.put(6,0,  -3.57610859e-02);
-//            distCoeffs.put(7,0,  4.21848915e-01);
+            distCoeffs = Mat.zeros(1, 8, CvType.CV_64FC1);
+            distCoeffs.put(0, 0, -9.95419459e-02);
+            distCoeffs.put(0, 1, -3.91315171e-02);
+            distCoeffs.put(0, 2, -1.41858075e-05);
+            distCoeffs.put(0, 3, -2.83714318e-03);
+            distCoeffs.put(0, 4, 3.91411052e-01);
+            distCoeffs.put(0, 5, 1.89461260e-02);
+            distCoeffs.put(0, 6, -3.46822362e-02);
+            distCoeffs.put(0, 7, 4.24582720e-01);
 
 
-//
-//            Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F);
-//            cameraMatrix.put(0, 0, 893.42840576-0); //fx
-//            cameraMatrix.put(1, 1, 877.09185791-0); //fy
-//            cameraMatrix.put(0, 2, 624.81191272); //cx
-//            cameraMatrix.put(1, 2, 514.94520346); //cy
-//            cameraMatrix.put(2, 2, 1);
-//
-//            //Distorsion coefficients
-//
-//            Mat distCoeffs = Mat.zeros(5, 1, CvType.CV_64F);
-//            distCoeffs.put(0,0, .21450156);
-//            distCoeffs.put(1,0,-1.57484691);
-//            distCoeffs.put(2,0,0.03136477);
-//            distCoeffs.put(3,0, -0.03581248);
-//            distCoeffs.put(4,0, 1.22821392);
 
-
-            //Objects Points
 
             // DIST FROM CENTER OF THE MARKER TO 4 CORNERS IN M WIDTH = 0.172M  HEIGHT = 0.171M  AVG = 0.1715 /2 = 0.08575
             MatOfPoint3f objPoints = new MatOfPoint3f(new Point3(-MarkerSizeinm/2, MarkerSizeinm/2, 0), new Point3(MarkerSizeinm/2, MarkerSizeinm/2, 0),
@@ -427,6 +410,9 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
                 Calib3d.drawFrameAxes(RGBmatFromBitmap, cameraMatrix, distCoeffs, rvecs.row(i), tvecs.row(i), 0.13f);
                 Mat arucorotationmat = new Mat(3,3,6);
                 Calib3d.Rodrigues (rvecs.row(i), arucorotationmat);
+
+                dannyisgoinghome = MatrixToYawPitchRoll(arucorotationmat);
+
                 Mat cameraMatrixAruco = new Mat();
                 Mat rotMatrixAru = new Mat();
                 Mat transVectAru = new Mat();
@@ -551,9 +537,9 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
             TextView theTextView4 = (TextView) findViewById(R.id.textView4);
             TextView theTextView5 = (TextView) findViewById(R.id.textView5);
             TextView theTextView6 = (TextView) findViewById(R.id.textView6);
-            theTextView1.setText("X: " + String.format("%.4f", arucotranslationvector[0])  + " ,  ");
-            theTextView2.setText("Y: " + String.format("%.4f", arucotranslationvector[1])  + " ,  ");
-            theTextView3.setText("Z: " + String.format("%.4f", arucotranslationvector[2])  + " ,  ");
+            theTextView1.setText("X: " + String.format("%.4f", dannyisgoinghome[0])  + " ,  ");
+            theTextView2.setText("Y: " + String.format("%.4f", dannyisgoinghome[1])  + " ,  ");
+            theTextView3.setText("Z: " + String.format("%.4f", dannyisgoinghome[2])  + " ,  ");
             theTextView4.setText("Yaw: " + String.format("%.4f", arucoyaw)  + " ,  ");
             theTextView5.setText("Roll: " + String.format("%.4f", arucoroll)  + " ,  ");
             theTextView6.setText("Pitch: " + String.format("%.4f", arucopitch)  + " ,  ");
@@ -565,16 +551,16 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
             theTextView6.setTextColor(Color.BLUE);
 
         }
-//
-//        float current = System.currentTimeMillis();
-//        deltatime += current - previous;
-////        showToast(String.valueOf(deltatime));131072*200
-//        if(deltatime>1000){
+
+        float current = System.currentTimeMillis();
+        deltatime += current - previous;
+//        showToast(String.valueOf(deltatime));131072*200
+        if(deltatime>300){
 //            Toast.makeText(this, "differencia"+deltatime,Toast.LENGTH_SHORT).show();
-//            saveImageToExternalStorage(BitmapFromFeedersSurface);
-//
-//        }
-//        previous = current;
+            saveImageToExternalStorage(BitmapFromFeedersSurface);
+
+            previous = current;
+        }
 
 
         Bitmap DisplayBitmap = Bitmap.createBitmap(RGBmatFromBitmap.cols(),RGBmatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
@@ -582,5 +568,40 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
         mImageSurface.setImageBitmap(null);
         mImageSurface.setImageBitmap(DisplayBitmap);
     }
+    public double[] MatrixToYawPitchRoll( Mat A )
+    {
+//        Log.i("TAG", "MatrixToYawPitchRoll: " + A.dump());
+        double[] angle = new double[3];
+        angle[1] = -Math.asin( A.get(2,0)[0] )*57.2957795;  //Pitch
 
+        //Gymbal lock: pitch = -90
+        if( A.get(2,0)[0]   == 1 ){
+            angle[0] = 0.0;             //yaw = 0
+            angle[2] = Math.atan2( -A.get(0,1)[0], -A.get(0,2)[0] )* 57.2957795;
+
+            }
+
+
+            //Roll
+//            System.out.println("Gimbal lock: pitch = -90");
+
+
+
+        //Gymbal lock: pitch = 90
+        else if( A.get(2,0)[0] == -1 ){
+            angle[0] = 0.0;             //yaw = 0
+            angle[2] = Math.atan2( A.get(0,1)[0], A.get(0,2)[0] )* 57.2957795;
+//Roll
+//            System.out.println("Gimbal lock: pitch = 90");
+        }
+        //General solution
+        else{
+            angle[0] = Math.atan2(  A.get(1,0)[0], A.get(0,0)[0] )* 57.2957795;
+            angle[2] = Math.atan2(  A.get(2,1)[0], A.get(2,2)[0] )* 57.2957795;
+
+
+//            System.out.println("No gimbal lock");
+        }
+        return angle;   //Euler angles in order yaw, pitch, roll
+    }
 }
