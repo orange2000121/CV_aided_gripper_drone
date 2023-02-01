@@ -54,7 +54,7 @@ import dji.sdk.flightcontroller.FlightAssistant;
 import dji.sdk.flightcontroller.FlightController;
 
 public class OldFeederView extends AppCompatActivity implements TextureView.SurfaceTextureListener {
-    private static final String TAG = DemoApplication.class.getName();
+    private static final String TAG = OldFeederView.class.getName();
     protected VideoFeeder.VideoDataListener mReceivedVideoDataListener = null;
     protected DJICodecManager mCodecManager = null;
 
@@ -114,7 +114,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 //                    @Override
 //                    public void onSuccess(PerceptionInformation perceptionInformation) {
 //                        int down_distance = perceptionInformation.getDownwardObstacleDistance();
-//                        Log.i(TAG, "Downward distance: " + down_distance);
+//                        Log.i(TAG, "onSuccess: " + down_distance);
 //                    }
 //
 //                    @Override
@@ -132,6 +132,10 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         // Turn on the avoidance system
         flightAssistant.setLandingProtectionEnabled(false,null);
         flightAssistant.setCollisionAvoidanceEnabled(false, null);
+        flightAssistant.setUpwardVisionObstacleAvoidanceEnabled(false, null);
+//        flightAssistant.setVisualObstaclesAvoidanceDistance(1.2f, PerceptionInformation.DJIFlightAssistantObstacleSensingDirection.Horizontal,null); //Horizontal Field. The horizontal distance range is 1.1m~40m
+//        flightAssistant.setVisualObstaclesAvoidanceDistance(0.4f, PerceptionInformation.DJIFlightAssistantObstacleSensingDirection.Downward,null); //Downward sensing. The downward distance range is 0.6m~30m
+//        flightAssistant.setVisualObstaclesAvoidanceDistance(1.1f, PerceptionInformation.DJIFlightAssistantObstacleSensingDirection.Upward,null); //Upward sensing. The upward distance range is 1.1m~30m
     }
 
     @Override
@@ -199,37 +203,21 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             flight.moveTo(0,0,0.5);
         });
         DownBtn.setOnClickListener(v -> {
-            showToast("Down");
-            flight.moveTo(0,0,-.5);
+            flight_thread = new Thread(()->{
+                flight.calib();
+            });
+            flight_thread.start();
         });
         ArucoBtn.setOnClickListener(v -> {
-            EnableVirtualStick.performClick();
-            TakeOffBtn.performClick();
             flight_thread = new Thread(()->{
-                // 往需提取物品的方向移動
-                ArucoCoordinate goal = flight.findAruco(23);
-                if(goal == null) return;
-                flight.moveTo(goal.x,goal.z -1.2,-goal.y + 0.9);
-                // 再靠近一點
-                SystemClock.sleep(2000); // wait for the Aruco detection
-                goal = flight.findAruco(23);
-                if(goal == null) return;
-                flight.moveTo(goal.x,goal.z - 0.5,-goal.y + 0.75);
-                //往前往上吊起物品
-                flight.moveTo(0,0.5,0);
-                flight.moveTo(0,0,0.5);
-                //往終點移動
-                goal = flight.findAruco(15);
-                if(goal == null) return;
-                flight.moveTo(goal.x,goal.z - 1.2,-goal.y + 1);
-                flightController.startLanding(djiError -> Log.i(TAG, "Landing: " + djiError));
+                flight.test4();
             });
             flight_thread.start();
         });
 
         MoveTo.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.test1();
+                flight.test3();
             });
             flight_thread.start();
         });
@@ -558,12 +546,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             yaw = flight.yaw;
             if (flightController != null) {
                 //接口写反了，setPitch()应该传入roll值，setRoll()应该传入pitch值
-                flightController.sendVirtualStickFlightControlData(new FlightControlData(pitch, roll, yaw, throttle), new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        if (djiError != null) {
-                            ToastUtils.setResultToToast(djiError.getDescription());
-                        }
+                flightController.sendVirtualStickFlightControlData(new FlightControlData(pitch, roll, yaw, throttle), djiError -> {
+                    if (djiError != null) {
+                        ToastUtils.setResultToToast(djiError.getDescription());
                     }
                 });
             }

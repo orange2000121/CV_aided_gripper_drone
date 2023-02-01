@@ -36,6 +36,7 @@ public class ArucoMethod {
 
     /* ----------------------------- private variable ---------------------------- */
     public Mat cameraMatrix, distCoeffs;//camera matrix and distortion coefficients
+    String TAG = ArucoMethod.class.getName();
 
     /* -------------------------------------------------------------------------- */
     /*                                 constructor                                */
@@ -121,7 +122,8 @@ public class ArucoMethod {
                 Calib3d.drawFrameAxes(RGBMatFromBitmap, cameraMatrix, distCoeffs, rvecs.row(i), tvecs.row(i), 0.13f);
                 Mat aruco_rotation_vec = new Mat(3, 3, 6);
                 Calib3d.Rodrigues(rvecs.row(i), aruco_rotation_vec);
-                double[] aruco_translation_vector = tvecs.get(i, 0); //get the translation vector
+                double[] aruco_translation_vector = tvecs.get(i, 0); //get the x,y,z translation vector
+                double[] old_yawPitchRoll = oldMatrixToYawPitchRoll(rvecs,tvecs,i);// get the yaw pitch and roll
                 double[] yawPitchRoll = MatrixToYawPitchRoll(aruco_rotation_vec);// get the yaw pitch and roll
                 double aruco_roll = yawPitchRoll[2];
                 double aruco_pitch = yawPitchRoll[1];
@@ -145,11 +147,9 @@ public class ArucoMethod {
                     Imgproc.circle(RGBMatFromBitmap, points[1], 10, new Scalar(0, 0, 0), 4);
                     Imgproc.circle(RGBMatFromBitmap, points[2], 10, new Scalar(0, 255, 0, 150), 4);
                     Imgproc.circle(RGBMatFromBitmap, points[3], 10, new Scalar(0, 0, 255), 4);
-
                 }
                 projected.release();
             }
-
         }
         //Bitmap DisplayBitmap = Bitmap.createBitmap(RGBMatFromBitmap.cols(),RGBMatFromBitmap.rows(), Bitmap.Config.ARGB_8888);
         Bitmap DisplayBitmap = Bitmap.createBitmap(pic_width, pic_height, Bitmap.Config.ARGB_8888);
@@ -157,8 +157,49 @@ public class ArucoMethod {
 //        Calib3d.undistort(RGBMatFromBitmap, displayMat, cameraMatrix, distCoeffs);
         Utils.matToBitmap(RGBMatFromBitmap, DisplayBitmap);
 //        Utils.matToBitmap(displayMat, DisplayBitmap);
-
         return DisplayBitmap;
+    }
+    // todo: 完成更新中位數
+    private void updateAruco(ArucoCoordinate aruco){
+        for (ArucoCoordinate aruco_temp : current_arucos) {
+            if(aruco_temp.id == aruco.id){
+
+            }
+        }
+    }
+    private double[] oldMatrixToYawPitchRoll(Mat rvecs, Mat tvecs, int i){
+        Mat aruco_rotation_vec = new Mat(3, 3, 6);
+        Calib3d.Rodrigues(rvecs.row(i), aruco_rotation_vec);
+        Mat cameraMatrixAruco = new Mat();
+        Mat rotMatrixAru = new Mat();
+        Mat transVectAru = new Mat();
+        Mat ArucoeulerAngles = new Mat();
+        Mat rotMatrixX22 = new Mat();
+        Mat rotMatrixY22 = new Mat();
+        Mat rotMatrixZ22 = new Mat();
+        Mat projMatrix22 = new Mat();
+        Mat RT = Mat.zeros(3, 4, CvType.CV_64F);
+
+        RT.put(0, 0, aruco_rotation_vec.get(0, 0)[0]);
+        RT.put(0, 1, aruco_rotation_vec.get(0, 0)[0]);
+        RT.put(0, 2, aruco_rotation_vec.get(0, 2)[0]);
+        RT.put(0, 3, tvecs.get(i, 0)[0]);
+        RT.put(1, 0, aruco_rotation_vec.get(1, 0)[0]);
+        RT.put(1, 1, aruco_rotation_vec.get(1, 1)[0]);
+        RT.put(1, 2, aruco_rotation_vec.get(1, 2)[0]);
+        RT.put(1, 3, tvecs.get(i, 0)[1]);
+        RT.put(2, 0, aruco_rotation_vec.get(2, 0)[0]);
+        RT.put(2, 1, aruco_rotation_vec.get(2, 1)[0]);
+        RT.put(2, 2, aruco_rotation_vec.get(2, 2)[0]);
+        RT.put(2, 3, tvecs.get(i, 0)[2]);
+
+        Core.gemm(cameraMatrix, RT, 1, new Mat(), 0, projMatrix22, 0);
+
+        Calib3d.decomposeProjectionMatrix(projMatrix22, cameraMatrixAruco, rotMatrixAru, transVectAru, rotMatrixX22, rotMatrixY22, rotMatrixZ22, ArucoeulerAngles);
+        double arucoroll = ArucoeulerAngles.get(0, 0)[0];  //for debugging, printing on screen
+        double arucopitch = ArucoeulerAngles.get(1, 0)[0];
+        double arucoyaw = -ArucoeulerAngles.get(2, 0)[0];// change sign to get the rotation needed by the drone not the paper
+        return new double[]{arucoyaw, arucopitch, arucoroll};
     }
     private double[] MatrixToYawPitchRoll( Mat A )
     {
@@ -168,7 +209,6 @@ public class ArucoMethod {
         if( A.get(2,0)[0]   == 1 ){
             angle[0] = 0.0;             //yaw = 0
             angle[2] = Math.atan2( -A.get(0,1)[0], -A.get(0,2)[0] )* 57.2957795;
-
         }
         //Gymbal lock: pitch = 90
         else if( A.get(2,0)[0] == -1 ){
@@ -234,5 +274,4 @@ class ArucoCoordinate{
             return list.get(list.size() / 2);
         }
     }
-
 }

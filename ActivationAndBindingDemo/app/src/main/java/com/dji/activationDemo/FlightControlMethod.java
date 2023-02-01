@@ -14,13 +14,16 @@ import static java.lang.Math.sqrt;
 import android.os.SystemClock;
 
 import android.util.Log;
+
+import org.opencv.core.Core;
+
 import java.util.List;
 
 
 public class FlightControlMethod {
     public float roll, pitch, throttle, yaw;// control the drone flying
     public boolean emg_now = false;// emergency button
-    String TAG = "FlightControlMethod";
+    String TAG = FlightControlMethod.class.getName();
     public List<ArucoCoordinate> arucoCoordinateList=null; //current aruco coordinate list
     private FlightController flightController; //flight controller from dji sdk
     public int function_times = 0;
@@ -46,38 +49,211 @@ public class FlightControlMethod {
     /* -------------------------------------------------------------------------- */
 
     public void test1(){
+//        if(emg_now) return;
+//        //---------go to first aruco
+//        ArucoCoordinate goal = findAruco(23);
+//        if(goal==null) return;
+//        moveTo(goal.x, goal.z-1.5, -goal.y+1.2);
+//        goal = findAruco(23);
+//        facingTheFront(goal);
+//        goal = findAruco(23);
+//        moveTo(goal.x, goal.z-0.45, -goal.y+1.2);
+//        switchVirtualStickMode(false);
         if(emg_now) return;
-        //---------go to first aruco
+        switchVirtualStickMode(true);
+//---------go to second aruco
         ArucoCoordinate goal = findAruco(23);
         if(goal==null) return;
-        moveTo(goal.x, goal.z-1.5, -goal.y+1.2);
+        moveTo(goal.x/3, (goal.z-1.48)/3, (-goal.y+0.45)/3);
         goal = findAruco(23);
         facingTheFront(goal);
         goal = findAruco(23);
-        moveTo(goal.x, goal.z-0.25, -goal.y+1.2);
-        //-----grip
-        moveTo(0,0, -0.53); //move down to grip
-        SystemClock.sleep(3000);
-        moveTo(0,0, 0.53); //move up to take off
-        //---------go to second aruco
-        goal = findAruco(31);
+        moveTo((goal.x-0.03)*2/3, (goal.z -1.48)*2/3, (-goal.y+0.45)*2/3);
+//        goal = findAruco(23);
+//        facingTheFront(goal);
+//        goal = findAruco(23);
+//        moveTo(goal.x-0.01, goal.z -1.70, -goal.y+0.45);
+//        goal = findAruco(23);
+//        facingTheFront(goal);
+        switchVirtualStickMode(false);
+
+    }
+
+    public void test1_1(){
+        float x_offset = 0.0f;
+        float y_offset = 1.0f;
+        float z_offset = -1.7f;
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+        //-----------------go to first aruco
+        ArucoCoordinate goal = findAruco(23);
         if(goal==null) return;
+//        for(int i=0;i<2;i++){
+//            if(facingTheFront(goal)) break;
+//            goal = findAruco(23);
+//        }
+//        goal = findAruco(23);
+        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
+        goal = findAruco(23);
+        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
+        goal = findAruco(23);
+        for(int i=0;i<2;i++){
+            if(facingTheFront(goal)) break;
+            goal = findAruco(23);
+        }
+        goal = findAruco(23);
+        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
+        switchVirtualStickMode(false);
+    }
+    public void test1_2(){
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+        float x_offset = -0.64f;
+        float y_offset = 1.0f;
+        float z_offset = -.95f;
+        //-----------------go to first aruco
+        ArucoCoordinate goal = findAruco(23);
+        if(goal==null) return;
+        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
+        goal = findAruco(23);
+        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
+        goal = findAruco(23);
+        for(int i=0;i<2;i++){
+            if(facingTheFront(goal)) break;
+            goal = findAruco(23);
+        }
+        goal = findAruco(23);
+        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
+        switchVirtualStickMode(false);
+    }
+    public void calib(){
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+        ArucoCoordinate goal = findAruco(23);
         facingTheFront(goal);
-        SystemClock.sleep(500);
-        goal = findAruco(31);
-        moveTo(goal.x*0.8, goal.z-1.7, -goal.y+1);
-        goal = findAruco(31);
-        moveTo(goal.x, goal.z -1.5, -goal.y+1);
-        goal = findAruco(31);
-        facingTheFront(goal);
-        goal = findAruco(31);
-        moveTo(goal.x, goal.z -1.2, -goal.y+1);
+        goal = findAruco(23);
+        moveTo(goal.x, goal.z -1.5, -goal.y+0.5);
+        switchVirtualStickMode(false);
     }
     public void test2(){
-
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+//---------go to second aruco
+        rotation(85);
+        ArucoCoordinate goal = findAruco(31);
+        if(goal==null) return;
+//        facingTheFront(goal);
+//        SystemClock.sleep(500);
+//        goal = findAruco(31);
+        moveTo((goal.x-0.38)*0.3, (goal.z-1)*0.3, -goal.y+1);
+        goal = findAruco(31);
+//        facingTheFront(goal);
+//        goal = findAruco(31);
+        moveTo((goal.x-0.38)*2/3, (goal.z -1)*2/3, -goal.y+.8);
+//        goal = findAruco(31);
+//        facingTheFront(goal);
+//        goal = findAruco(31);
+//        moveTo(goal.x, goal.z -1.2, -goal.y+.8);
+        switchVirtualStickMode(false);
+    }
+    public void test2_1(){
+        float x_offset = -0.38f;
+        float y_offset = 1.0f;
+        float z_offset = -1.2f;
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+//---------go to second aruco
+        rotation(90);
+        ArucoCoordinate goal = findAruco(31);
+        if(goal==null) return;
+        SystemClock.sleep(500);
+        goal = findAruco(31);
+        moveTo((goal.x+x_offset)/3, (goal.z+z_offset)/3, -goal.y+y_offset);
+        goal = findAruco(31);
+        moveTo((goal.x+x_offset)/3, (goal.z+z_offset)/3, -goal.y+y_offset);
+        goal = findAruco(31);
+        for (int i=0;i<2;i++){
+            if(facingTheFront(goal)) break;
+            goal = findAruco(31);
+        }
+        goal = findAruco(31);
+        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
+        switchVirtualStickMode(false);
+    }
+    public void test2_2(){
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+        float x_offset = -1.4f;
+        float y_offset = 1.0f;
+        float z_offset = -1.0f;
+        //-----------------go to first aruco
+        rotation(-90);
+        ArucoCoordinate goal = findAruco(31);
+        if(goal==null) return;
+        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
+        goal = findAruco(31);
+        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
+        goal = findAruco(31);
+        for(int i=0;i<2;i++){
+            if(facingTheFront(goal)) break;
+            goal = findAruco(31);
+        }
+        goal = findAruco(31);
+        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
+        switchVirtualStickMode(false);
+    }
+    public void test3() {
+        float x_offset = 1.3f;
+        float y_offset = 0.8f;
+        float z_offset = -3f;
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+//---------go to second aruco
+        ArucoCoordinate goal = findAruco(23);
+        if(goal==null) return;
+        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, (-goal.y+y_offset)/3);
+        goal = findAruco(23);
+        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, (-goal.y+y_offset)*2/3);
+        goal = findAruco(23);
+        facingTheFront(goal);
+        goal = findAruco(23);
+        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
+        goal = findAruco(23);
+//        facingTheFront(goal);
+        switchVirtualStickMode(false);
     }
 
+    public void test4() {
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+        ArucoCoordinate aruco = findAruco(23);
+        if(aruco==null) return;
+        moveTo(0,0,0.7) ;
+        findAruco(23);
+        facingTheFront(aruco);
 
+        moveTo(.4,4.8,0);
+        rotateTo(1.2, -180);
+        SystemClock.sleep(500);
+        yaw =10;
+        SystemClock.sleep(1000);
+        setZero();
+        aruco = findAruco(23);
+        moveTo(aruco.x+2.48,0,0);
+        moveTo(0,0,0.8);
+        moveTo(0,3,0 );
+        moveTo(0,2.5,0 );
+
+//        rotateTo(-90);
+//        ArucoCoordinate goal =  findAruco(31);
+//        facingTheFront(goal);
+//        goal =  findAruco(31);
+//        moveTo(0,goal.z+2,0);
+
+        switchVirtualStickMode(false);
+
+
+    }
     public void goToArucoMarker(int aruco_id){
         if(emg_now) return;
         ArucoCoordinate goal_aruco = findAruco(aruco_id);
@@ -208,19 +384,20 @@ public class FlightControlMethod {
             setZero();
         }
 
-
     }
 
-    private void facingTheFront(ArucoCoordinate aruco){
-        if (emg_now) return;
-        if (aruco.roll <= -15 || aruco.roll >= 15) {
-            Log.e(TAG, "normalizeForwardAngle: aruco.roll is not zero");
-            return;
-        }
+    private boolean facingTheFront(ArucoCoordinate aruco){
+        if (emg_now) return false;
+//        if (aruco.roll <= -25 || aruco.roll >= 25) {
+//            Log.e(TAG, "normalizeForwardAngle: aruco.roll is not zero");
+//            return false;
+//        }
         float rotation_speed = 10;
         float time = abs(aruco.pitch / rotation_speed);
         yaw = aruco.pitch < 0 ? -rotation_speed : rotation_speed;
         SystemClock.sleep((long) time * 1000);
+        setZero();
+        return true;
     }
 
     /**
@@ -299,11 +476,39 @@ public class FlightControlMethod {
             setZero();
         }
     }
+    private void rotateTo(double radius, double yaw_angle) {
+        if(emg_now) return;
+        float roll_speed = 0.3f ;
+        double arc_length = radius * abs(yaw_angle) * 3.1416 / 180;
+        double time = abs(arc_length / roll_speed);
+        yaw = (float) ((float) yaw_angle/time);
+        roll = (float) roll_speed;
+        SystemClock.sleep((long) time * 1000);
+        setZero();
+
+    }
+    private void rotation(double yaw_angle){
+        if(emg_now) return;
+        float yaw_speed = 15;
+        double time = abs(yaw_angle / yaw_speed);
+        yaw = yaw_angle < 0 ? -yaw_speed : yaw_speed;
+        SystemClock.sleep((long) time * 1000);
+        setZero();
+    }
+    private void switchVirtualStickMode(boolean enable){
+        flightController.setVirtualStickModeEnabled(enable, djiError -> {
+            flightController.setVirtualStickAdvancedModeEnabled(true);
+            if (djiError != null) {
+                ToastUtils.setResultToToast(djiError.getDescription());
+            } else {
+                showToast("VS Enabled");
+            }
+        });
+    }
     public void setZero(){
         pitch = (float)0.0;
         roll = (float) 0.0;
         throttle = (float)0.0;
         yaw = (float)(0.0);
     }
-
 }

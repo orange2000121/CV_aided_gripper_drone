@@ -356,46 +356,27 @@ public class CameraCalib extends AppCompatActivity implements TextureView.Surfac
             Mat rvec1 = new Mat();
             Mat tvec1 = new Mat();
 
-//            //  Test camera matrix
+
             Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F); //300 - 600
-            cameraMatrix.put(0, 0, 577.12265401-30); //fx
-            cameraMatrix.put(1, 1, 577.12265401-30); //fy
-            cameraMatrix.put(0, 2, 624.27619131); //cx
-            cameraMatrix.put(1, 2, 493.79682551); //cy
-            cameraMatrix.put(2, 2, 1);
-//            showToast(cameraMatrix.toString());
-
-            // Distorsion coefficients
+            cameraMatrix = Mat.zeros(3, 3, CvType.CV_64FC1);
+            cameraMatrix.put(0, 0, 556.86218075);
+            cameraMatrix.put(0, 2, 624.18715691);
+            cameraMatrix.put(1, 1, 556.86218075);
+            cameraMatrix.put(1, 2, 556.86218075);
+            cameraMatrix.put(2, 2, 1.00000000e+00);
             Mat distCoeffs = Mat.zeros(0, 1, CvType.CV_64F);
-            distCoeffs.put(0,0, -1.00067366e-01);
-            distCoeffs.put(1,0,-4.24388662e-02 );
-            distCoeffs.put(2,0,5.06785331e-05);
-            distCoeffs.put(3,0, -2.77194518e-03);
-            distCoeffs.put(4,0,  3.90751297e-01);
-//            distCoeffs.put(5,0,   1.76991593e-02 );
-//            distCoeffs.put(6,0,  -3.57610859e-02);
-//            distCoeffs.put(7,0,  4.21848915e-01);
+            distCoeffs = Mat.zeros(1, 8, CvType.CV_64FC1);
+            distCoeffs.put(0, 0, -9.95419459e-02);
+            distCoeffs.put(0, 1, -3.91315171e-02);
+            distCoeffs.put(0, 2, -1.41858075e-05);
+            distCoeffs.put(0, 3, -2.83714318e-03);
+            distCoeffs.put(0, 4, 3.91411052e-01);
+            distCoeffs.put(0, 5, 1.89461260e-02);
+            distCoeffs.put(0, 6, -3.46822362e-02);
+            distCoeffs.put(0, 7, 4.24582720e-01);
 
 
-//
-//            Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64F);
-//            cameraMatrix.put(0, 0, 893.42840576-0); //fx
-//            cameraMatrix.put(1, 1, 877.09185791-0); //fy
-//            cameraMatrix.put(0, 2, 624.81191272); //cx
-//            cameraMatrix.put(1, 2, 514.94520346); //cy
-//            cameraMatrix.put(2, 2, 1);
-//
-//            //Distorsion coefficients
-//
-//            Mat distCoeffs = Mat.zeros(5, 1, CvType.CV_64F);
-//            distCoeffs.put(0,0, .21450156);
-//            distCoeffs.put(1,0,-1.57484691);
-//            distCoeffs.put(2,0,0.03136477);
-//            distCoeffs.put(3,0, -0.03581248);
-//            distCoeffs.put(4,0, 1.22821392);
 
-
-            //Objects Points
 
             // DIST FROM CENTER OF THE MARKER TO 4 CORNERS IN M WIDTH = 0.172M  HEIGHT = 0.171M  AVG = 0.1715 /2 = 0.08575
             MatOfPoint3f objPoints = new MatOfPoint3f(new Point3(-MarkerSizeinm/2, MarkerSizeinm/2, 0), new Point3(MarkerSizeinm/2, MarkerSizeinm/2, 0),
