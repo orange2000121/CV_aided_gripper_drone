@@ -22,6 +22,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.dji.activationDemo.payload.PayloadDataTransmission;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -71,6 +73,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
 //--------Camera
     private Button mCaptureBtn;
+
+//--------Payload
+    private PayloadDataTransmission payload = new PayloadDataTransmission();
 
 //--------Video Feed
     protected TextureView mVideoTexture = null;
@@ -218,6 +223,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         MoveTo.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
                 flight.test3();
+                payload.gripperControl(true);
+                SystemClock.sleep(2000);
+                payload.gripperControl(false);
             });
             flight_thread.start();
         });

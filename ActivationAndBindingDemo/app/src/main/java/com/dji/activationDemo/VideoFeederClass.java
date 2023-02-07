@@ -19,6 +19,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ToggleButton;
 
+import com.dji.sdk.sample.internal.utils.VideoFeedView;
+
 import dji.common.airlink.PhysicalSource;
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
@@ -29,8 +31,6 @@ import dji.sdk.camera.Camera;
 import dji.sdk.codec.DJICodecManager;
 import dji.sdk.media.FetchMediaTask;
 import dji.sdk.sdkmanager.DJISDKManager;
-
-import com.dji.sdk.sample.internal.utils.VideoFeedView;
 
 import java.io.File;
 import java.io.FileOutputStream;
