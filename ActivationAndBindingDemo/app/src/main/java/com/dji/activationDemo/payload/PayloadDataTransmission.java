@@ -21,6 +21,9 @@ public class PayloadDataTransmission {
         }
     }
 
+    /**
+     * @param isGripperOpen The boolean value to control the gripper open or close.
+     */
     public void gripperControl(boolean isGripperOpen){
         switch (isGripperOpen){
             case true:
@@ -32,6 +35,9 @@ public class PayloadDataTransmission {
         }
     }
 
+    /**
+     * @param sendingDataStr The data to be sent to the payload device.
+     */
     public void sendDataToPayload(String sendingDataStr) {
         Log.e(TAG, "sending:" + sendingDataStr);
         final byte[] data = ViewHelper.getBytes(sendingDataStr);
