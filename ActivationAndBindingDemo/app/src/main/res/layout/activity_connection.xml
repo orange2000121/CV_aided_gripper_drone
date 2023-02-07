@@ -31,6 +31,7 @@
         android:textStyle="bold"
         />
 
+
     <Button
         android:id="@+id/btn_new_feeder"
         android:layout_width="130dp"
@@ -42,18 +43,6 @@
         android:textColor="@color/colorWhite"
         android:textSize="20dp" />
 
-
-    <Button
-        android:id="@+id/btn_camera_calib"
-        android:layout_width="130dp"
-        android:layout_height="55dp"
-        android:layout_marginLeft="140dp"
-        android:layout_marginTop="420dp"
-        android:background="@drawable/round_btn"
-        android:text="Camera Calib"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp" />
-
     <Button
         android:id="@+id/btn_old_feeder"
         android:layout_width="130dp"
@@ -62,6 +51,28 @@
         android:layout_marginTop="350dp"
         android:background="@drawable/round_btn"
         android:text="Old Feeder"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp" />
+
+    <Button
+        android:id="@+id/btn_payload"
+        android:layout_width="130dp"
+        android:layout_height="55dp"
+        android:layout_marginLeft="220dp"
+        android:layout_marginTop="420dp"
+        android:background="@drawable/round_btn"
+        android:text="PAYLOAD"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp" />
+
+    <Button
+        android:id="@+id/btn_camera_calib3"
+        android:layout_width="130dp"
+        android:layout_height="55dp"
+        android:layout_marginLeft="70dp"
+        android:layout_marginTop="420dp"
+        android:background="@drawable/round_btn"
+        android:text="Camera Calib"
         android:textColor="@color/colorWhite"
         android:textSize="20dp" />
 

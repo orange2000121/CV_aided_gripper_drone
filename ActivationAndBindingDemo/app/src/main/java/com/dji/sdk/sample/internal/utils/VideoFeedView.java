@@ -1,6 +1,7 @@
 package com.dji.sdk.sample.internal.utils;
 
 import android.content.Context;
+import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -10,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import androidx.annotation.NonNull;
-
 import dji.midware.usb.P3.UsbAccessoryService;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
@@ -37,6 +37,7 @@ public class VideoFeedView extends SurfaceView {
         Observable.timer(100, TimeUnit.MICROSECONDS).observeOn(AndroidSchedulers.mainThread()).repeat();
     private Subscription subscription;
     private SurfaceHolder surfaceHolder;
+
     //endregion
 
     //region Life-Cycle
@@ -116,7 +117,7 @@ public class VideoFeedView extends SurfaceView {
                 final long now = System.currentTimeMillis();
                 final long ellapsedTime = now - lastReceivedFrameTime.get();
                 if (coverView != null) {
-                    if (ellapsedTime > WAIT_TIME && false) {
+                    if (ellapsedTime > WAIT_TIME && !ModuleVerificationUtil.isMavic2Product()) {
                         if (coverView.getVisibility() == INVISIBLE) {
                             coverView.setVisibility(VISIBLE);
                         }

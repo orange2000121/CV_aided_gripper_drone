@@ -19,6 +19,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.dji.activationDemo.payload.PayloadActivity;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,6 +43,7 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
     private Button mBtnnewfeeder;
     private Button mBtnoldfeeder;
     private Button mBtncameraCalib;
+    private Button mBtnPayload;
     private TextView mVersionTv;
 
     private static final String[] REQUIRED_PERMISSION_LIST = new String[]{
@@ -228,7 +231,10 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         mTextProduct = (TextView) findViewById(R.id.text_product_info);
         mBtnnewfeeder = (Button) findViewById(R.id.btn_new_feeder);
         mBtnoldfeeder= (Button) findViewById(R.id.btn_old_feeder);
-        mBtncameraCalib = (Button) findViewById(R.id.btn_camera_calib);
+        mBtncameraCalib = (Button) findViewById(R.id.btn_camera_calib3);
+        mBtnPayload = (Button) findViewById(R.id.btn_payload);
+        mBtnPayload.setOnClickListener(this);
+        mBtnPayload.setEnabled(false);
         mBtncameraCalib.setOnClickListener(this);
         mBtncameraCalib.setEnabled(false);
         mBtnnewfeeder.setOnClickListener(this);
@@ -255,6 +261,7 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             mBtnnewfeeder.setEnabled(true);
             mBtnoldfeeder.setEnabled(true);
             mBtncameraCalib.setEnabled(true);
+            mBtnPayload.setEnabled(true);
 
             String str = mProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
             mTextConnectionStatus.setText("Status: " + str + " connected");
@@ -269,6 +276,7 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             Log.v(TAG, "refreshSDK: False");
             mBtnnewfeeder.setEnabled(false);
             mBtncameraCalib.setEnabled(false);
+            mBtnPayload.setEnabled(false);
             mBtnoldfeeder.setEnabled(false);
             mTextProduct.setText(R.string.product_information);
             mTextConnectionStatus.setText(R.string.connection_loose);
@@ -285,8 +293,12 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             Intent intent = new Intent(ConnectionActivity.this, OldFeederView.class);
             startActivity(intent);
         }
-        if (v.getId() == R.id.btn_camera_calib) {
+        if (v.getId() == R.id.btn_camera_calib3) {
             Intent intent = new Intent(ConnectionActivity.this, CameraCalib.class);
+            startActivity(intent);
+        }
+        if (v.getId() == R.id.btn_payload) {
+            Intent intent = new Intent(ConnectionActivity.this, PayloadActivity.class);
             startActivity(intent);
         }
     }
