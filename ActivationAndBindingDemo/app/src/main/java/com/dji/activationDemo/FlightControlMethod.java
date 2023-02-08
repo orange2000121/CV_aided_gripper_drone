@@ -1,5 +1,6 @@
 package com.dji.activationDemo;
-import static com.dji.activationDemo.ToastUtils.showToast;
+
+import static com.dji.sdk.sample.internal.utils.ToastUtils.showToast;
 
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
@@ -14,6 +15,8 @@ import static java.lang.Math.sqrt;
 import android.os.SystemClock;
 
 import android.util.Log;
+
+import com.dji.sdk.sample.internal.utils.ToastUtils;
 
 import org.opencv.core.Core;
 

@@ -1,6 +1,9 @@
 package com.dji.activationDemo;
 
-import static com.dji.activationDemo.ToastUtils.showToast;
+import static com.dji.sdk.sample.internal.utils.ToastUtils.showToast;
+
+import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
+import com.dji.sdk.sample.internal.utils.ToastUtils;
 
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
@@ -27,7 +30,6 @@ import com.dji.activationDemo.payload.PayloadDataTransmission;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.calib3d.Calib3d;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,7 +42,6 @@ import java.util.TimerTask;
 
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.LEDsSettings;
-import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;

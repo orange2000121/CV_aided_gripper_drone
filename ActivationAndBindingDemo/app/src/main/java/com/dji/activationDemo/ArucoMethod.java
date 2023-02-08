@@ -85,8 +85,10 @@ public class ArucoMethod {
         Aruco.detectMarkers(grayImage, dictionary, corners, ids, parameters);
 
         if (corners.size() > 0) {
-            //Draw lines at center of the image
-            //Vertical line
+            /*
+              Draw lines at center of the image
+              Vertical line
+            */
             Point start_vert_line = new Point((double) pic_width / 2, 0);
             Point end_vert_line = new Point((double) pic_width / 2, pic_height);
             Scalar color_line = new Scalar(255, 0, 0);

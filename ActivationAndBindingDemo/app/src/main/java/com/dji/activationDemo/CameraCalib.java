@@ -1,4 +1,6 @@
 package com.dji.activationDemo;
+import static com.dji.sdk.sample.internal.utils.ToastUtils.showToast;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
@@ -20,7 +22,6 @@ import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-import static com.dji.activationDemo.ToastUtils.showToast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -46,6 +47,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;

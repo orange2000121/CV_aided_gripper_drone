@@ -1,5 +1,4 @@
-package com.dji.activationDemo;
-
+package com.dji.sdk.sample.internal.utils;
 
 import android.app.Activity;
 import android.content.Context;
@@ -26,18 +25,18 @@ import dji.sdk.sdkmanager.DJISDKManager;
 
 public class Helper {
 
-    public Helper() {
+	public Helper() {
 
-    }
+	}
 
-    /**
-     * Shows message on current activity.
-     *
-     * @param activity The activity the user want to show toast.
-     * @param msg The String that the user want to put in the message.
-     */
-    public static void showToast(final Activity activity, final String msg) {
-        activity.runOnUiThread(new Runnable() {
+	/**
+	 * Shows message on current activity.
+	 *
+	 * @param activity The activity the user want to show toast.
+	 * @param msg The String that the user want to put in the message.
+	 */
+	public static void showToast(final Activity activity, final String msg) {
+		activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show();
@@ -58,13 +57,13 @@ public class Helper {
         });
     }
 
-    /**
-     * Transfers to list from enum array.
-     *
-     * @param o An object array
-     * @return An ArrayList object of String for enum.
-     */
-    public static ArrayList<String> makeList(Object[] o) {
+	/**
+	 * Transfers to list from enum array.
+	 *
+	 * @param o An object array
+	 * @return An ArrayList object of String for enum.
+	 */
+	public static ArrayList<String> makeList(Object[] o) {
         ArrayList<String> list = new ArrayList<String>();
         for (int i = 0; i < o.length; i++) {
             list.add(o[i].toString());
@@ -168,8 +167,8 @@ public class Helper {
     }
 
     public static boolean isMultiStreamPlatform() {
-        if (DJISDKManager.getInstance() == null){
-            return false;
+	    if (DJISDKManager.getInstance() == null){
+	        return false;
         }
         Model model = DJISDKManager.getInstance().getProduct().getModel();
         return model != null && (model == Model.INSPIRE_2
@@ -242,4 +241,3 @@ public class Helper {
         return null;
     }
 }
-

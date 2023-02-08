@@ -1,7 +1,8 @@
 package com.dji.activationDemo;
 //---------------------------------------------------------------
-import static com.dji.activationDemo.ToastUtils.setResultToToast;
-import static com.dji.activationDemo.ToastUtils.showToast;
+
+import static com.dji.sdk.sample.internal.utils.ToastUtils.setResultToToast;
+import static com.dji.sdk.sample.internal.utils.ToastUtils.showToast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ToggleButton;
 
+import com.dji.sdk.sample.internal.utils.Helper;
+import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.VideoFeedView;
 
 import dji.common.airlink.PhysicalSource;
@@ -119,7 +122,7 @@ public class VideoFeederClass extends AppCompatActivity implements View.OnClickL
                     setResultToToast("Primary Source: " + newPhysicalSource.toString());
                 }
                 if (videoFeed == dji.sdk.camera.VideoFeeder.getInstance().getSecondaryVideoFeed()) {
-                    ToastUtils.setResultToToast("Secondary Source: " + newPhysicalSource.toString());
+                    setResultToToast("Secondary Source: " + newPhysicalSource.toString());
                 }
             }
         };
@@ -202,9 +205,9 @@ public class VideoFeederClass extends AppCompatActivity implements View.OnClickL
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
             camera = DemoApplication.getAircraftInstance().getCamera();
             if (ModuleVerificationUtil.isMatrice300RTK() || ModuleVerificationUtil.isMavicAir2()) {
-                camera.setFlatMode(SettingsDefinitions.FlatCameraMode.PHOTO_SINGLE, djiError -> ToastUtils.setResultToToast("setFlatMode to PHOTO_SINGLE"));
+                camera.setFlatMode(SettingsDefinitions.FlatCameraMode.PHOTO_SINGLE, djiError -> setResultToToast("setFlatMode to PHOTO_SINGLE"));
             } else {
-                camera.setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO, djiError -> ToastUtils.setResultToToast("setMode to shoot_PHOTO"));
+                camera.setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO, djiError -> setResultToToast("setMode to shoot_PHOTO"));
             }
 
             if (isModuleAvailable()) {
@@ -217,7 +220,7 @@ public class VideoFeederClass extends AppCompatActivity implements View.OnClickL
                                 if (null == djiError) {
                                     //ToastUtils.setResultToToast(getContext().getString(R.string.success));
                                 } else {
-                                    ToastUtils.setResultToToast(djiError.getDescription());
+                                    setResultToToast(djiError.getDescription());
                                 }
 
                             }

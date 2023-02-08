@@ -25,13 +25,10 @@ public class PayloadDataTransmission {
      * @param isGripperOpen The boolean value to control the gripper open or close.
      */
     public void gripperControl(boolean isGripperOpen){
-        switch (isGripperOpen){
-            case true:
-                sendDataToPayload("y");
-                break;
-            case false:
-                sendDataToPayload("n");
-                break;
+        if (isGripperOpen) {
+            sendDataToPayload("y");
+        } else {
+            sendDataToPayload("n");
         }
     }
 
