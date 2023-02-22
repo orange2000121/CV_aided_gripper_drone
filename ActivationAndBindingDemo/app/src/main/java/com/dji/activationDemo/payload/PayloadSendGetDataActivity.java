@@ -13,8 +13,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.dji.activationDemo.DemoApplication;
 import com.dji.activationDemo.R;
-import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.utils.GeneralUtils;
 import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
@@ -90,7 +90,7 @@ public class PayloadSendGetDataActivity extends AppCompatActivity implements Vie
         View sendButton = findViewById(R.id.send_data_button);
         sendButton.setOnClickListener(this);
         if (ModuleVerificationUtil.isPayloadAvailable()) {
-            payload = DJISampleApplication.getAircraftInstance().getPayload();
+            payload = DemoApplication.getAircraftInstance().getPayload();
 
             /**
              *  Gets the product name defined by the manufacturer of the payload device.

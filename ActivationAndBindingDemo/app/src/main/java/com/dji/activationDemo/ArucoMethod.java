@@ -76,7 +76,6 @@ public class ArucoMethod {
         parameters.set_cornerRefinementMinAccuracy(0.05);
         parameters.set_cornerRefinementWinSize(5);
         Dictionary dictionary = Aruco.getPredefinedDictionary(Aruco.DICT_6X6_50); //MARKER NUMBER 23
-//        Bitmap BitmapFromFeedersSurface = Bitmap.createScaledBitmap(mVideoTexture.getBitmap(), pic_width, pic_height, true);
         Mat RGBMatFromBitmap = new Mat();
 
         Utils.bitmapToMat(BitmapFromFeedersSurface, droneImage);
@@ -125,7 +124,6 @@ public class ArucoMethod {
                 Mat aruco_rotation_vec = new Mat(3, 3, 6);
                 Calib3d.Rodrigues(rvecs.row(i), aruco_rotation_vec);
                 double[] aruco_translation_vector = tvecs.get(i, 0); //get the x,y,z translation vector
-                double[] old_yawPitchRoll = oldMatrixToYawPitchRoll(rvecs,tvecs,i);// get the yaw pitch and roll
                 double[] yawPitchRoll = MatrixToYawPitchRoll(aruco_rotation_vec);// get the yaw pitch and roll
                 double aruco_roll = yawPitchRoll[2];
                 double aruco_pitch = yawPitchRoll[1];
