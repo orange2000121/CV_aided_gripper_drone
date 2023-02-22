@@ -13,7 +13,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.dji.activationDemo.R;
-import com.dji.sdk.sample.internal.controller.DJISampleApplication;
+import com.dji.activationDemo.DemoApplication;
 import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.utils.ViewHelper;
@@ -52,7 +52,7 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
         findViewById(R.id.sent_data).setOnClickListener(this);
         findViewById(R.id.login_sdk).setOnClickListener(this);
         if (ModuleVerificationUtil.isPayloadAvailable()) {
-            payload = DJISampleApplication.getAircraftInstance().getPayload();
+            payload = DemoApplication.getAircraftInstance().getPayload();
 
             /**
              *  Gets the product name defined by the manufacturer of the payload device.

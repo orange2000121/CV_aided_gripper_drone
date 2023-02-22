@@ -2,7 +2,7 @@ package com.dji.activationDemo.payload;
 
 import android.util.Log;
 
-import com.dji.sdk.sample.internal.controller.DJISampleApplication;
+import com.dji.activationDemo.DemoApplication;
 import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ViewHelper;
 
@@ -17,7 +17,7 @@ public class PayloadDataTransmission {
     }
     private void initListener() {
         if (ModuleVerificationUtil.isPayloadAvailable()) {
-            payload = DJISampleApplication.getAircraftInstance().getPayload();
+            payload = DemoApplication.getAircraftInstance().getPayload();
         }
     }
 

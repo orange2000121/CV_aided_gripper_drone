@@ -244,7 +244,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             if (djiError != null) {
                 ToastUtils.setResultToToast(djiError.getDescription());
             } else {
-                showToast("VS Disabled");
+//                showToast("VS Disabled");
             }
         }));
         TurnOnMotorsBtn.setOnClickListener(v -> flightController.turnOnMotors(new CommonCallbacks.CompletionCallback() {

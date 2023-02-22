@@ -10,8 +10,8 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.dji.activationDemo.DemoApplication;
 import com.dji.activationDemo.R;
-import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 
@@ -61,7 +61,7 @@ public class PayloadWidgetActivity extends AppCompatActivity {
         widgetValue = (EditText) findViewById(R.id.widgetValue);
         configureWidgetValue = (Button) findViewById(R.id.configureWidgetValue);
         if (ModuleVerificationUtil.isPayloadAvailable()) {
-            payload = DJISampleApplication.getAircraftInstance().getPayload();
+            payload = DemoApplication.getAircraftInstance().getPayload();
             printWidget();
         }
         initListener();
