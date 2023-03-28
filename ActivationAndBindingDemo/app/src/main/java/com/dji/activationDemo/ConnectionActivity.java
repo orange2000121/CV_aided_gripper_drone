@@ -44,6 +44,7 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
     private Button mBtnoldfeeder;
     private Button mBtncameraCalib;
     private Button mBtnPayload;
+    private Button mBtnPathGen;
     private TextView mVersionTv;
 
     private static final String[] REQUIRED_PERMISSION_LIST = new String[]{
@@ -129,16 +130,16 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
-                    showToast( "registering, pls wait...");
+                    //showToast( "registering, pls wait...");
                     DJISDKManager.getInstance().registerApp(getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
                         @Override
                         public void onRegister(DJIError djiError) {
                             if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
                                 DJILog.e("App registration", DJISDKError.REGISTRATION_SUCCESS.getDescription());
                                 DJISDKManager.getInstance().startConnectionToProduct();
-                                showToast("Register Success");
+                                //showToast("Register Success");
                             } else {
-                                showToast( "Register sdk fails, check network is available");
+                                //showToast( "Register sdk fails, check network is available");
                             }
                             Log.v(TAG, djiError.getDescription());
                         }
@@ -233,6 +234,8 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         mBtnoldfeeder= (Button) findViewById(R.id.btn_old_feeder);
         mBtncameraCalib = (Button) findViewById(R.id.btn_camera_calib3);
         mBtnPayload = (Button) findViewById(R.id.btn_payload);
+        mBtnPathGen = (Button) findViewById(R.id.btn_pathgen);
+
         mBtnPayload.setOnClickListener(this);
         mBtnPayload.setEnabled(false);
         mBtncameraCalib.setOnClickListener(this);
@@ -240,7 +243,9 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         mBtnnewfeeder.setOnClickListener(this);
         mBtnnewfeeder.setEnabled(false);
         mBtnoldfeeder.setOnClickListener(this);
-        mBtnoldfeeder.setEnabled(true);
+        mBtnoldfeeder.setEnabled(false);
+        mBtnPathGen.setOnClickListener(this);
+        mBtnPathGen.setEnabled(true);
         mVersionTv = (TextView) findViewById(R.id.textView2);
         mVersionTv.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
     }
@@ -262,6 +267,7 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             mBtnoldfeeder.setEnabled(true);
             mBtncameraCalib.setEnabled(true);
             mBtnPayload.setEnabled(true);
+            mBtnPathGen.setEnabled(true);
 
             String str = mProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
             mTextConnectionStatus.setText("Status: " + str + " connected");
@@ -278,9 +284,12 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             mBtncameraCalib.setEnabled(false);
             mBtnPayload.setEnabled(false);
             mBtnoldfeeder.setEnabled(false);
+            mBtnPathGen.setEnabled(true);
+
             mTextProduct.setText(R.string.product_information);
             mTextConnectionStatus.setText(R.string.connection_loose);
         }
+
     }
 
     @Override
@@ -299,6 +308,10 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         }
         if (v.getId() == R.id.btn_payload) {
             Intent intent = new Intent(ConnectionActivity.this, PayloadActivity.class);
+            startActivity(intent);
+        }
+        if (v.getId() == R.id.btn_pathgen) {
+            Intent intent = new Intent(ConnectionActivity.this, PathGenActivity.class);
             startActivity(intent);
         }
     }

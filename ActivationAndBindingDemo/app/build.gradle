@@ -5,7 +5,7 @@ repositories {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     buildToolsVersion '30.0.2'
     useLibrary 'org.apache.http.legacy'
 
@@ -64,6 +64,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 
@@ -80,6 +83,8 @@ dependencies {
         exclude module: 'library-anti-distortion'
         exclude module: 'fly-safe-database'
     })
+    implementation 'androidx.navigation:navigation-fragment:2.5.2'
+    implementation 'androidx.navigation:navigation-ui:2.5.2'
     compileOnly 'com.dji:dji-sdk-provided:4.16.2'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'com.quickbirdstudios:opencv-contrib:4.5.3.0'

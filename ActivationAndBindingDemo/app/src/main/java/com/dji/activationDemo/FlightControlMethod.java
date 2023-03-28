@@ -18,8 +18,7 @@ import android.util.Log;
 
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 
-import org.opencv.core.Core;
-
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -410,10 +409,10 @@ public class FlightControlMethod {
     public void setFlightMode(String mode){
         switch(mode){
             case "VELOCITY":
-                 flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
-                 flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-                 flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
-                 flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
+//                 flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
+//                 flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
+//                 flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
+//                 flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
                  break;
              case "ANGLE":
                  flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
@@ -514,4 +513,99 @@ public class FlightControlMethod {
         throttle = (float)0.0;
         yaw = (float)(0.0);
     }
+
+
+    public void SCurveProfiling (double frontback,double leftright,double updown){
+
+
+        double jmax=12, vmax =2 ,amax=3 ,xf=5*3.14/6;
+        double T=(amax/jmax)+(vmax/amax)+(xf/vmax), t1=amax/jmax ,t3=(amax/jmax)+(vmax/amax),t2=t3-t1,t4=T-t3,t5=T-t2,t6=T-t1, t7=T;
+        double breakpoints[] = {t1,t2,t3,t4,t5,t6,t7};
+        double segments[] = {t1,t2-t1,t3-t2,t4-t3,t5-t4,t6-t5,t7-t6};
+        ArrayList<Double> arr_speed= new ArrayList<>();
+        ArrayList<Double> arr_time= new ArrayList<>();
+        int which_stage =1;
+
+//        boolean equality = true;
+//        while(equality == true){
+//            vmax=+0.5;
+//            if(((amax/jmax)+(vmax/amax))<=(((amax/jmax)+(vmax/amax)+(xf/vmax))/2)){
+//                equality=true;
+//            }
+//        }
+        int counter=1;
+
+        double time_increment = (breakpoints[0] - breakpoints[1]) / 1000,current_time = counter*time_increment;
+
+        int now_at=0;
+        while(now_at<=6){
+
+            double last_segment = breakpoints[now_at-1];
+            if(now_at==0)
+                last_segment=0;
+            current_time = last_segment;
+            time_increment = segments[now_at]/400;
+
+            while(breakpoints[now_at]>current_time){
+                double v= MotionConstants(current_time,now_at,xf);
+                current_time=(time_increment*counter)+last_segment;
+                arr_speed.add(v);
+                arr_speed.add(current_time);
+                counter++;
+            }
+            now_at++;
+            counter=1;
+        }
+
+    }
+
+    public double MotionConstants(double current_time, int which_stage, double xf){
+
+//      double[] array;
+        double t = current_time;
+        double v=0,jmax=12, vmax =2 ,amax=3;
+        double T=(amax/jmax)+(vmax/amax)+(xf/vmax), t1=amax/jmax ,t3=(amax/jmax)+(vmax/amax),t2=t3-t1,t4=T-t3,t5=T-t2,t6=T-t1, t7=T;
+        double a1=jmax, a2 =0, a3= -jmax, a4=0, a5=-jmax,a6=0, a7=jmax;
+
+        double b1=0, b2= amax, b3=amax+(jmax*t2),b4=0,b5=jmax*t4,b6=-amax,b7=-amax-(jmax*t6);
+
+        double c1=0,c2=((a1*t1*t1)/2+c1+(b1*t1))-((a2*t1*t1)/2+(b2*t1)),
+                c3=((a2*t2*t2)/2+c2+(b2*t2))-((a3*t2*t2)/2+(b3*t2)),
+                c4=((a3*t3*t3)/2+c3+(b3*t3))-((a4*t3*t3)/2+(b4*t3)),
+                c5=((a4*t4*t4)/2+c4+(b4*t4))-((a5*t4*t4)/2+(b5*t4)),
+                c6=((a5*t5*t5)/2+c5+(b5*t5))-((a6*t5*t5)/2+(b6*t5)),
+                c7=((a6*t6*t6)/2+c6+(b6*c6))-((a7*t6*t6)/2+(b7*t6));
+
+        //double v1=a1*t1*t1/2+b1*t1+c1,v2=a2*t2*t2/2+b2*t2+c2,v3=a3*t3*t3/2+b3*t3+c3,v4=a4*t4*t4/2+b4*t4+c4,v5=a5*t5*t5/2+b5*t5+c5,v6=a6*t6*t6/2+b6*t6+c6,v7=a7*t7*t7/2+b7*t7+c7;
+
+        switch(which_stage){
+            case 1:
+                v=a1*t*t/2+b1*t+c1;
+                return v;
+            case 2:
+                v=a2*t*t/2+b2*t+c2;
+                break;  //optional
+            case 3:
+                v=a3*t*t/2+b3*t+c3;
+                return v;
+            case 4:
+                v=a4*t*t/2+b4*t+c4;
+                return v;
+            case 5:
+                v=a5*t*t/2+b5*t+c5;
+                return v;
+            case 6:
+                v=a6*t*t/2+b6*t+c6;
+                return v;
+            case 7:
+                v=a7*t*t/2+b7*t+c7;
+                return v;
+            default:
+                setZero();
+                break;
+
+        }
+        return v;
+    }
+
 }

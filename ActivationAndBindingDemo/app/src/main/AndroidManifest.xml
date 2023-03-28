@@ -35,15 +35,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".PathGenActivity"
+            android:exported="false"
+            android:label="@string/title_activity_path_gen"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.Fullscreen" />
+        <activity
             android:name=".CameraCalib"
             android:exported="true"
             android:screenOrientation="landscape"
-            android:theme="@style/AppTheme.Fullscreen"/>
+            android:theme="@style/AppTheme.Fullscreen" />
         <activity
             android:name=".OldFeederView"
             android:exported="true"
             android:screenOrientation="landscape"
-            android:theme="@style/AppTheme.Fullscreen" /> <!-- DJI SDK -->
+            android:theme="@style/AppTheme.Fullscreen" /><!-- DJI SDK -->
         <activity
             android:name=".VideoFeederClass"
             android:exported="true"
@@ -52,11 +58,12 @@
         <activity
             android:name=".payload.PayloadActivity"
             android:configChanges="orientation|screenSize"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape" />
         <activity
             android:name=".payload.PayloadSendGetDataActivity"
             android:configChanges="orientation|screenSize"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape" />
+
         <uses-library android:name="com.android.future.usb.accessory" />
         <uses-library
             android:name="org.apache.http.legacy"

@@ -108,7 +108,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
     };
 
-    private void initParams() {
+    private void initFlightControllerParams() {
         // We recommend you use the below settings, a standard american hand style.
         if (flightController == null) {
             if (ModuleVerificationUtil.isFlightControllerAvailable()) {
@@ -130,18 +130,34 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 //                });
             }
         }
-        flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
-        flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-        flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
-        flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
+//
+//        flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
+//        flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
+//        flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
+//        flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
         // Turn on the avoidance system
-        flightAssistant.setLandingProtectionEnabled(false,null);
-        flightAssistant.setCollisionAvoidanceEnabled(false, null);
-        flightAssistant.setUpwardVisionObstacleAvoidanceEnabled(false, null);
+//        flightAssistant.setLandingProtectionEnabled(false,null);
+//        flightAssistant.setCollisionAvoidanceEnabled(false, null);
+//        flightAssistant.setUpwardVisionObstacleAvoidanceEnabled(false, null);
 //        flightAssistant.setVisualObstaclesAvoidanceDistance(1.2f, PerceptionInformation.DJIFlightAssistantObstacleSensingDirection.Horizontal,null); //Horizontal Field. The horizontal distance range is 1.1m~40m
 //        flightAssistant.setVisualObstaclesAvoidanceDistance(0.4f, PerceptionInformation.DJIFlightAssistantObstacleSensingDirection.Downward,null); //Downward sensing. The downward distance range is 0.6m~30m
 //        flightAssistant.setVisualObstaclesAvoidanceDistance(1.1f, PerceptionInformation.DJIFlightAssistantObstacleSensingDirection.Upward,null); //Upward sensing. The upward distance range is 1.1m~30m
+    }
+
+    private void InitdroneSpeed() {
+        pY = 0;
+        pX = 0;
+        float verticalJoyControlMaxSpeed = 1;
+        throttle = (float)(verticalJoyControlMaxSpeed * pY);
+        float horizontalJoyControlMaxSpeed = 1;
+        pitch = (float)(verticalJoyControlMaxSpeed * pX);
+
+        if (null == mSendVirtualStickDataTimer) {
+            mSendVirtualStickDataTask = new SendVirtualStickDataTask();
+            mSendVirtualStickDataTimer = new Timer();
+            mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 0, 200);
+        }
     }
 
     @Override
@@ -149,8 +165,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_old_feeder_view);
         initUI();
-        initParams();
-        droneStart();
+        initFlightControllerParams();
+        InitdroneSpeed();
         FlightController flightController = ModuleVerificationUtil.getFlightController();
         flight.register(flightController);
         flight.register(arucoMethod.current_arucos);
@@ -216,7 +232,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         });
         ArucoBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.test4();
+                flight.SCurveProfiling(0,0,0);
             });
             flight_thread.start();
         });
@@ -564,20 +580,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         }
     }
 
-    private void droneStart() {
-        pY = 0;
-        pX = 0;
-        float verticalJoyControlMaxSpeed = 1;
-        throttle = (float)(verticalJoyControlMaxSpeed * pY);
-        float horizontalJoyControlMaxSpeed = 1;
-        pitch = (float)(verticalJoyControlMaxSpeed * pX);
-
-        if (null == mSendVirtualStickDataTimer) {
-            mSendVirtualStickDataTask = new SendVirtualStickDataTask();
-            mSendVirtualStickDataTimer = new Timer();
-            mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 0, 200);
-        }
-    }
 
 
     @Override
