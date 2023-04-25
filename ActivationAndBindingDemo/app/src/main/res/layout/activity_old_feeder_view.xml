@@ -356,5 +356,13 @@
         android:layout_height="wrap_content"
         app:constraint_referenced_ids="btn_forward,btn_yaw,btn_right,btn_backwards,btn_left" />
 
+    <Button
+        android:id="@+id/btn_startPos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="start pos"
+        app:layout_constraintBottom_toBottomOf="@+id/btn_takeoff"
+        app:layout_constraintStart_toEndOf="@+id/btn_takeoff" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -35,10 +35,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".CameraCalib"
             android:exported="true"
             android:screenOrientation="landscape"
-            android:theme="@style/AppTheme.Fullscreen"/>
+            android:theme="@style/AppTheme.Fullscreen" />
         <activity
             android:name=".OldFeederView"
             android:exported="true"
@@ -52,11 +60,12 @@
         <activity
             android:name=".payload.PayloadActivity"
             android:configChanges="orientation|screenSize"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape" />
         <activity
             android:name=".payload.PayloadSendGetDataActivity"
             android:configChanges="orientation|screenSize"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape" />
+
         <uses-library android:name="com.android.future.usb.accessory" />
         <uses-library
             android:name="org.apache.http.legacy"
@@ -83,9 +92,6 @@
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
         </activity>
-        <activity
-            android:name=".MainActivity"
-            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

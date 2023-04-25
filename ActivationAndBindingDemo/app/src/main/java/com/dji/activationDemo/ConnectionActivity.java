@@ -240,7 +240,7 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         mBtnnewfeeder.setOnClickListener(this);
         mBtnnewfeeder.setEnabled(false);
         mBtnoldfeeder.setOnClickListener(this);
-        mBtnoldfeeder.setEnabled(true);
+        mBtnoldfeeder.setEnabled(false);
         mVersionTv = (TextView) findViewById(R.id.textView2);
         mVersionTv.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
     }
