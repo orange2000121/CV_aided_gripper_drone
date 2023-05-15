@@ -13,9 +13,13 @@ import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
 import android.os.SystemClock;
-
 import android.util.Log;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.dji.activationDemo.payload.PayloadActivity;
+import com.dji.activationDemo.payload.PayloadDataTransmission;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 
 import org.opencv.core.Core;
@@ -23,13 +27,14 @@ import org.opencv.core.Core;
 import java.util.List;
 
 
-public class FlightControlMethod {
+public class FlightControlMethod extends AppCompatActivity {
     public float roll, pitch, throttle, yaw;// control the drone flying
     public boolean emg_now = false;// emergency button
     String TAG = FlightControlMethod.class.getName();
     public List<ArucoCoordinate> arucoCoordinateList=null; //current aruco coordinate list
     private FlightController flightController; //flight controller from dji sdk
     public int function_times = 0;
+    private PayloadDataTransmission payload = new PayloadDataTransmission();
     /* ------------------------------- Constructive ------------------------------- */
     public FlightControlMethod(){}
 
@@ -52,60 +57,43 @@ public class FlightControlMethod {
     /* -------------------------------------------------------------------------- */
 
     public void test1(){
-//        if(emg_now) return;
-//        //---------go to first aruco
-//        ArucoCoordinate goal = findAruco(23);
-//        if(goal==null) return;
-//        moveTo(goal.x, goal.z-1.5, -goal.y+1.2);
-//        goal = findAruco(23);
-//        facingTheFront(goal);
-//        goal = findAruco(23);
-//        moveTo(goal.x, goal.z-0.45, -goal.y+1.2);
-//        switchVirtualStickMode(false);
+        float x_offset = 1.0f;
+        float y_offset = 1.0f;
+        float z_offset = -1.8f;
+        float payload_x_offset = 0.0f;
+        float payload_y_offset = 0.0f;
+        float payload_z_offset = 0.9f;
+
         if(emg_now) return;
         switchVirtualStickMode(true);
 //---------go to second aruco
-        ArucoCoordinate goal = findAruco(23);
-        if(goal==null) return;
-        moveTo(goal.x/3, (goal.z-1.48)/3, (-goal.y+0.45)/3);
-        goal = findAruco(23);
-        facingTheFront(goal);
-        goal = findAruco(23);
-        moveTo((goal.x-0.03)*2/3, (goal.z -1.48)*2/3, (-goal.y+0.45)*2/3);
-//        goal = findAruco(23);
-//        facingTheFront(goal);
-//        goal = findAruco(23);
-//        moveTo(goal.x-0.01, goal.z -1.70, -goal.y+0.45);
-//        goal = findAruco(23);
-//        facingTheFront(goal);
+        ArucoCoordinate goal = findAruco(30);
+        goal = findAruco(30);
+        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
+        while (true) {
+            float[] loacation = payload.getBottomLocation();
+            if (max(abs(loacation[0]), max(abs(loacation[1]), abs(loacation[2]-payload_z_offset))) < 0.05f) break;
+            moveTo(loacation[0], loacation[1], -loacation[2]+payload_z_offset, 0.2f);
+        }
         switchVirtualStickMode(false);
-
     }
 
     public void test1_1(){
-        float x_offset = 0.0f;
-        float y_offset = 1.0f;
-        float z_offset = -1.7f;
+        float x_offset = -2.5f;
+        float y_offset = 1.5f;
+        float z_offset = -3.0f;
         if(emg_now) return;
         switchVirtualStickMode(true);
         //-----------------go to first aruco
         ArucoCoordinate goal = findAruco(23);
         if(goal==null) return;
-//        for(int i=0;i<2;i++){
-//            if(facingTheFront(goal)) break;
-//            goal = findAruco(23);
-//        }
-//        goal = findAruco(23);
         moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
         goal = findAruco(23);
         moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
         goal = findAruco(23);
-        for(int i=0;i<2;i++){
-            if(facingTheFront(goal)) break;
-            goal = findAruco(23);
-        }
-        goal = findAruco(23);
-        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
+        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+1.5f);
+        moveTo(0,4,0);
+        moveTo(0,4,0);
         switchVirtualStickMode(false);
     }
     public void test1_2(){
@@ -129,13 +117,27 @@ public class FlightControlMethod {
         moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
         switchVirtualStickMode(false);
     }
+
+    public void startPos(){
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+        ArucoCoordinate goal = findAruco(30);
+        facingTheFront(goal);
+        goal = findAruco(30);
+        moveTo(goal.x, goal.z -2.5f, -goal.y+1.0f);
+        goal = findAruco(30);
+        facingTheFront(goal);
+        goal = findAruco(30);
+        moveTo(goal.x, goal.z -2.5f, -goal.y+1.0f);
+        switchVirtualStickMode(false);
+    }
     public void calib(){
         if(emg_now) return;
         switchVirtualStickMode(true);
         ArucoCoordinate goal = findAruco(23);
         facingTheFront(goal);
         goal = findAruco(23);
-        moveTo(goal.x, goal.z -1.5, -goal.y+0.5);
+        moveTo(goal.x, goal.z -1.5f, -goal.y+0.5f);
         switchVirtualStickMode(false);
     }
     public void test2(){
@@ -148,11 +150,11 @@ public class FlightControlMethod {
 //        facingTheFront(goal);
 //        SystemClock.sleep(500);
 //        goal = findAruco(31);
-        moveTo((goal.x-0.38)*0.3, (goal.z-1)*0.3, -goal.y+1);
+        moveTo((goal.x-0.38f)*0.3f, (goal.z-1)*0.3f, -goal.y+1);
         goal = findAruco(31);
 //        facingTheFront(goal);
 //        goal = findAruco(31);
-        moveTo((goal.x-0.38)*2/3, (goal.z -1)*2/3, -goal.y+.8);
+        moveTo((goal.x-0.38f)*2/3, (goal.z -1)*2/3, -goal.y+.8f);
 //        goal = findAruco(31);
 //        facingTheFront(goal);
 //        goal = findAruco(31);
@@ -231,21 +233,21 @@ public class FlightControlMethod {
         switchVirtualStickMode(true);
         ArucoCoordinate aruco = findAruco(23);
         if(aruco==null) return;
-        moveTo(0,0,0.7) ;
+        moveTo(0,0,0.7f) ;
         findAruco(23);
         facingTheFront(aruco);
 
-        moveTo(.4,4.8,0);
+        moveTo(.4f,4.8f,0);
         rotateTo(1.2, -180);
         SystemClock.sleep(500);
         yaw =10;
         SystemClock.sleep(1000);
         setZero();
         aruco = findAruco(23);
-        moveTo(aruco.x+2.48,0,0);
-        moveTo(0,0,0.8);
+        moveTo(aruco.x+2.48f,0,0);
+        moveTo(0,0,0.8f);
         moveTo(0,3,0 );
-        moveTo(0,2.5,0 );
+        moveTo(0,2.5f,0 );
 
 //        rotateTo(-90);
 //        ArucoCoordinate goal =  findAruco(31);
@@ -389,7 +391,7 @@ public class FlightControlMethod {
 
     }
 
-    private boolean facingTheFront(ArucoCoordinate aruco){
+    private boolean  facingTheFront(ArucoCoordinate aruco){
         if (emg_now) return false;
 //        if (aruco.roll <= -25 || aruco.roll >= 25) {
 //            Log.e(TAG, "normalizeForwardAngle: aruco.roll is not zero");
@@ -432,42 +434,36 @@ public class FlightControlMethod {
      * @param front_back_gap : the gap between drone and aruco marker in z axis
      * @param up_down_gap : the gap between drone and aruco marker in y axis
      */
-    public void moveTo(double right_left_gap, double front_back_gap, double up_down_gap) {
+    public void moveTo(float right_left_gap, float front_back_gap, float up_down_gap){
+        moveTo(right_left_gap, front_back_gap, up_down_gap, 0.5f);
+    }
+    /**
+     * @param right_left_gap : the gap between drone and aruco marker in x axis
+     * @param front_back_gap : the gap between drone and aruco marker in z axis
+     * @param up_down_gap : the gap between drone and aruco marker in y axis
+     * @param max_speed : limit the max speed of the drone
+     */
+    public void moveTo(float right_left_gap, float front_back_gap, float up_down_gap, float max_speed) {
         if(emg_now) return;
-        // todo: 確認這段註解是否要保留
-//        flightController.setVirtualStickModeEnabled(true, djiError -> {
-//            flightController.setVirtualStickAdvancedModeEnabled(true);
-//            if (djiError != null) {
-//                ToastUtils.setResultToToast(djiError.getDescription());
-//            }
-//        });
-        double distance = sqrt(right_left_gap * right_left_gap + front_back_gap * front_back_gap + up_down_gap * up_down_gap);
+        if(max_speed > 1) {
+            Log.e(TAG, "moveTo: max_speed is too large");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    showToast("max_speed is too large");
+                }
+            });
+            return;
+        };
+        float distance = (float) sqrt(right_left_gap * right_left_gap + front_back_gap * front_back_gap + up_down_gap * up_down_gap);
         float higher_speed = (float) max(abs(right_left_gap),max(abs(front_back_gap), abs(up_down_gap)) );
-
-        if (higher_speed > 1) {
-            /*
-            * Make the max speed of the drone is 1m/s
-            * Calculate speed proportional to distance
-            */
-            roll = (float) front_back_gap / higher_speed;
-            throttle = (float) up_down_gap / higher_speed;
-            pitch = (float) right_left_gap / higher_speed;
-        } else {
-            /*
-            * If the distance is less than 1 meter, the speed is proportional to distance
-            */
-            float basic_speed = 1;
-            roll = basic_speed * (float) front_back_gap;
-            throttle = basic_speed * (float) up_down_gap;
-            pitch = basic_speed * (float) right_left_gap;
+        // if the distance is less than 1 meter, make the max speed smaller
+        if (higher_speed < 1) {
+            max_speed *= 0.5f;
         }
-
-        /*
-        * Reduce the speed of the drone
-        */
-        roll /= 2;
-        pitch /= 2;
-        throttle /= 2;
+        roll = (float) front_back_gap / distance * max_speed;
+        throttle = (float) up_down_gap / distance * max_speed;
+        pitch = (float) right_left_gap / distance * max_speed;
         Log.i(TAG, "roll: " + roll);
         Log.i(TAG, "pitch: " + pitch);
         Log.i(TAG, "throttle: " + throttle);

@@ -30,6 +30,8 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
     private TextView pushUDPTextView;
     private Payload payload = null;
     private String payloadName = "";
+    private PayloadDataTransmission dataTransmission = null;
+    private boolean usePayload = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,44 +47,57 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
         pushUARTTextView = (TextView) findViewById(R.id.push_info_text_UART);
         pushUDPTextView = (TextView) findViewById(R.id.push_info_text_UDP);
         pushUARTTextView.setMovementMethod(new ScrollingMovementMethod());
+
+        dataTransmission = new PayloadDataTransmission();
         initListener();
     }
 
     private void initListener() {
         findViewById(R.id.sent_data).setOnClickListener(this);
         findViewById(R.id.login_sdk).setOnClickListener(this);
+        findViewById(R.id.btn_location).setOnClickListener(this);
+
         if (ModuleVerificationUtil.isPayloadAvailable()) {
-            payload = DemoApplication.getAircraftInstance().getPayload();
+            if(usePayload){
+                payload = DemoApplication.getAircraftInstance().getPayload();
+            }
 
             /**
              *  Gets the product name defined by the manufacturer of the payload device.
              */
-            payloadName = payload.getPayloadProductName();
+            if(usePayload){
+                payloadName = payload.getPayloadProductName();
+            }
             payloadNameView.setText("Payload Name:" + (TextUtils.isEmpty(payloadName) ? "N/A" : payloadName));
             payloadNameView.invalidate();
 
             /**
              *  Set the command data callback, the command data typically sent by payload in UART/CAN channel, the max bandwidth of this channel is 3KBytes/s on M200.
              */
-            payload.setCommandDataCallback(new Payload.CommandDataCallback() {
-                @Override
-                public void onGetCommandData(byte[] bytes) {
-                    String str = ViewHelper.getStringUTF8(bytes, 0, bytes.length);
-                    Log.i("PayloadActivity", "onGetCommandData: " + str);
-                    updateUARTPushData(str);
-                }
-            });
+            if(usePayload){
+                payload.setCommandDataCallback(new Payload.CommandDataCallback() {
+                    @Override
+                    public void onGetCommandData(byte[] bytes) {
+                        String str = ViewHelper.getStringUTF8(bytes, 0, bytes.length);
+                        Log.i("PayloadActivity", "onGetCommandData: " + str);
+                        updateUARTPushData(str);
+                    }
+                });
+            }
+
 
             /**
              *  Set the UDP data callback, this callback is for receiving the Non-Video data in UDP channel, the max bandwidth of this channel is 8Mbps in M200, 4Mbps in M210
              */
-            payload.setStreamDataCallback(new Payload.StreamDataCallback() {
-                @Override
-                public void onGetStreamData(byte[] bytes, int i) {
-                    String str = ViewHelper.getStringUTF8(bytes, 0, i);
-                    updateUDPPushData(str);
-                }
-            });
+            if(usePayload) {
+                payload.setStreamDataCallback(new Payload.StreamDataCallback() {
+                    @Override
+                    public void onGetStreamData(byte[] bytes, int i) {
+                        String str = ViewHelper.getStringUTF8(bytes, 0, i);
+                        updateUDPPushData(str);
+                    }
+                });
+            }
         }
     }
 
@@ -141,6 +156,14 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                           ToastUtils.showToast(error.getDescription());
                       }
                 });
+                break;
+            case R.id.btn_location:
+                float[] location = dataTransmission.getBottomLocation();
+                if(location != null) {
+                    ToastUtils.showToast("location: " + location[0] + ", " + location[1] + ", " + location[2]);
+                }else{
+                    ToastUtils.showToast("location is null");
+                }
                 break;
             default:
         }

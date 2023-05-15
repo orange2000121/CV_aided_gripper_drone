@@ -92,7 +92,7 @@ public class PayloadSendGetDataActivity extends AppCompatActivity implements Vie
         if (ModuleVerificationUtil.isPayloadAvailable()) {
             payload = DemoApplication.getAircraftInstance().getPayload();
 
-            /**
+            /**dataToBeSent
              *  Gets the product name defined by the manufacturer of the payload device.
              */
             payloadName = payload.getPayloadProductName();
@@ -105,6 +105,8 @@ public class PayloadSendGetDataActivity extends AppCompatActivity implements Vie
             payload.setCommandDataCallback(new Payload.CommandDataCallback() {
                 @Override
                 public void onGetCommandData(byte[] bytes) {
+                    String str = ViewHelper.getStringUTF8(bytes, 0, bytes.length);
+                    Log.i("Payload send get data", "onGetCommandData: " + str);
                     if (receivedDataView != null) {
                         runOnUiThread(new Runnable() {
                             @Override

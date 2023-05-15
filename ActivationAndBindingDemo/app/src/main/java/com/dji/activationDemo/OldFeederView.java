@@ -64,8 +64,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 //--------Flight Controller
     private FlightController flightController= null;
     private FlightAssistant flightAssistant = null;
-    private Button TurnOnMotorsBtn,TurnOffMotorsBtn, TakeOffBtn, LandBtn,DisableVirtualStick,EnableVirtualStick,ArucoBtn;
-    private Button EmergencyBtn,ForwardBtn, YawBtn,BackwardsBtn, RightBtn ,LeftBtn,UpBtn, DownBtn, MoveTo;
+    private Button TurnOnMotorsBtn,TurnOffMotorsBtn, TakeOffBtn, LandBtn,DisableVirtualStick,EnableVirtualStick;
+    private Button EmergencyBtn,ForwardBtn, YawBtn,BackwardsBtn, RightBtn ,LeftBtn,UpBtn, DownBtn;
+    private Button mBtnStart,ArucoBtn, MoveTo;
     private OnScreenJoystick screenJoystickRight,screenJoystickLeft;
     private Timer mSendVirtualStickDataTimer;
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
@@ -76,7 +77,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     private Button mCaptureBtn;
 
 //--------Payload
-    private PayloadDataTransmission payload = new PayloadDataTransmission();
+//    private PayloadDataTransmission payload = new PayloadDataTransmission();
 
 //--------Video Feed
     protected TextureView mVideoTexture = null;
@@ -206,7 +207,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         });
         UpBtn.setOnClickListener(v -> {
             showToast("Up");
-            flight.moveTo(0,0,0.5);
+            flight.moveTo(0,0,0.5f);
         });
         DownBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
@@ -214,19 +215,24 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             });
             flight_thread.start();
         });
+
+        mBtnStart.setOnClickListener(v -> {
+            flight_thread = new Thread(()->{
+                flight.startPos();
+            });
+            flight_thread.start();
+        });
+
         ArucoBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.test4();
+                flight.test1_1();
             });
             flight_thread.start();
         });
 
         MoveTo.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.test3();
-                payload.gripperControl(true);
-                SystemClock.sleep(2000);
-                payload.gripperControl(false);
+                flight.test1();
             });
             flight_thread.start();
         });
@@ -381,8 +387,11 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         LeftBtn = findViewById(R.id.btn_left);
         RightBtn = findViewById(R.id.btn_right);
         YawBtn = findViewById(R.id.btn_yaw);
+
         MoveTo = findViewById(R.id.btn_move_to);
         ArucoBtn = findViewById(R.id.btn_aruco);
+        mBtnStart = findViewById(R.id.btn_startPos);
+
         EnableVirtualStick = findViewById(R.id.btn_enable_virtual_stick);
         DisableVirtualStick = findViewById(R.id.btn_disable_virtual_stick);
         screenJoystickRight = (OnScreenJoystick)findViewById(R.id.directionJoystickRight);
