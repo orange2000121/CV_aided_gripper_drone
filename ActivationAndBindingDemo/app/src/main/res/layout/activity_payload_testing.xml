@@ -3,13 +3,14 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:keepScreenOn="true">
+
     <TextureView
         android:id="@+id/video_previewer_surface"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
         android:layout_centerInParent="true"
-        android:layout_gravity="center"
-        android:layout_alignParentTop="true"/>
+        android:layout_gravity="center" />
     <TextView
         android:id="@+id/payload_name"
         android:gravity="center"
@@ -76,6 +77,14 @@
                 android:layout_width="200dip"
                 android:layout_height="45dp"
                 android:text="Send Data Activity" />
+
+            <Button
+                android:id="@+id/btn_location"
+                style="@style/button_style"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:text="get location" />
+
         </LinearLayout>
 
     </ScrollView>

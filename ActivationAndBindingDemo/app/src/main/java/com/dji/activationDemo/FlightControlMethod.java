@@ -60,6 +60,9 @@ public class FlightControlMethod extends AppCompatActivity {
         float x_offset = 1.0f;
         float y_offset = 1.0f;
         float z_offset = -1.8f;
+        float payload_x_offset = 0.0f;
+        float payload_y_offset = 0.0f;
+        float payload_z_offset = 0.9f;
 
         if(emg_now) return;
         switchVirtualStickMode(true);
@@ -69,8 +72,8 @@ public class FlightControlMethod extends AppCompatActivity {
         moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
         while (true) {
             float[] loacation = payload.getBottomLocation();
-            if (max(abs(loacation[0]), max(abs(loacation[1]), abs(loacation[2]))) < 0.05f) break;
-            moveTo(loacation[0], loacation[1], loacation[2], 0.2f);
+            if (max(abs(loacation[0]), max(abs(loacation[1]), abs(loacation[2]-payload_z_offset))) < 0.05f) break;
+            moveTo(loacation[0], loacation[1], -loacation[2]+payload_z_offset, 0.2f);
         }
         switchVirtualStickMode(false);
     }

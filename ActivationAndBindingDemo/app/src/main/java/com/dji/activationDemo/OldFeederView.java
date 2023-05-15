@@ -77,7 +77,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
     private Button mCaptureBtn;
 
 //--------Payload
-    private PayloadDataTransmission payload = new PayloadDataTransmission();
+//    private PayloadDataTransmission payload = new PayloadDataTransmission();
 
 //--------Video Feed
     protected TextureView mVideoTexture = null;
