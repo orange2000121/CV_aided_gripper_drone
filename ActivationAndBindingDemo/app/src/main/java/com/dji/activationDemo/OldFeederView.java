@@ -42,6 +42,7 @@ import java.util.TimerTask;
 
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.LEDsSettings;
+import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
@@ -117,11 +118,24 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 flightAssistant = flightController.getFlightAssistant();
                 assert flightAssistant != null;
                 //todo: 完成測量到地面距離
-//                flightAssistant.setToFPerceptionInformationCallback(new CommonCallbacks.CompletionCallbackWith<PerceptionInformation>() {
+//                flightAssistant.setVisualPerceptionInformationCallback(new CommonCallbacks.CompletionCallbackWith<PerceptionInformation>() {
 //                    @Override
 //                    public void onSuccess(PerceptionInformation perceptionInformation) {
-//                        int down_distance = perceptionInformation.getDownwardObstacleDistance();
-//                        Log.i(TAG, "onSuccess: " + down_distance);
+//                        int[] distances = perceptionInformation.getDistances();
+//                        int downwardObstacleDistance = perceptionInformation.getDownwardObstacleDistance();
+//                        int upwardObstacleDistance = perceptionInformation.getUpwardObstacleDistance();
+//                        //compute mean of distances from 350 to 10 degrees
+//                        int backward_distance = 0;
+//                        for (int i = 175; i < 185; i++) {
+//                            backward_distance += distances[i];
+//                        }
+//                        backward_distance /= 10;
+////                        Log.i(TAG, "onSuccess: downwardObstacleDistance: " + downwardObstacleDistance);
+////                        Log.i(TAG, "onSuccess: upwardObstacleDistance: " + upwardObstacleDistance);
+////                        Log.i(TAG, "onSuccess: forward distances: " + distances[0]);
+////                        Log.i(TAG, "onSuccess: right distances: " + distances[90]);
+//                        Log.i(TAG, "onSuccess: backward distances: " + backward_distance);
+////                        Log.i(TAG, "onSuccess: left distances: " + distances[270]);
 //                    }
 //
 //                    @Override
@@ -136,7 +150,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
-        // Turn on the avoidance system
+        // set Obstacle Avoidance
         flightAssistant.setLandingProtectionEnabled(false,null);
         flightAssistant.setCollisionAvoidanceEnabled(false, null);
         flightAssistant.setUpwardVisionObstacleAvoidanceEnabled(false, null);
@@ -155,6 +169,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         FlightController flightController = ModuleVerificationUtil.getFlightController();
         flight.register(flightController);
         flight.register(arucoMethod.current_arucos);
+        flight.register(OldFeederView.this);
         flight.setFlightMode("VELOCITY");
         if (flightController == null) {
             return;
@@ -207,7 +222,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         });
         UpBtn.setOnClickListener(v -> {
             showToast("Up");
-            flight.moveTo(0,0,0.5f);
+            flight.moveTo(0,0,1f);
         });
         DownBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
@@ -225,14 +240,17 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
         ArucoBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.test1_1();
             });
             flight_thread.start();
         });
 
         MoveTo.setOnClickListener(v -> {
-            flight_thread = new Thread(()->{
-                flight.test1();
+            flight_thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    flight.test1();
+
+                }
             });
             flight_thread.start();
         });
@@ -253,10 +271,11 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 //                showToast("VS Disabled");
             }
         }));
-        TurnOnMotorsBtn.setOnClickListener(v -> flightController.turnOnMotors(new CommonCallbacks.CompletionCallback() {
+        TurnOnMotorsBtn.setOnClickListener(v -> flight.flightController.turnOnMotors(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
                 if (djiError != null) {
+                    Log.e(TAG, "onResult: " + djiError.getErrorCode());
                     ToastUtils.setResultToToast(djiError.getDescription());
                 }else{
                     showToast("Turning on Motors");

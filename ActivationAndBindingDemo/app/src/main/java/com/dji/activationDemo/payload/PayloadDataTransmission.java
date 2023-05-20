@@ -2,25 +2,32 @@ package com.dji.activationDemo.payload;
 
 import static java.lang.Math.max;
 
+import android.app.Activity;
+import android.content.Context;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.dji.activationDemo.DemoApplication;
 import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ViewHelper;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.concurrent.Future;
 
+import dji.publics.DJIObject.ActivateAction;
 import dji.sdk.payload.Payload;
 
-public class PayloadDataTransmission {
+public class PayloadDataTransmission extends AppCompatActivity {
     private static final String TAG = "PayloadDataTransmission";
-    private Payload payload = null;
+    public Payload payload = null;
+    private Context context = null;
 
     String payloadReceiveData = "";
 
     /*constructor*/
-    public PayloadDataTransmission(){
+    public PayloadDataTransmission(Context context){
+        this.context = context;
         initListener();
     }
     static class Constants{
@@ -70,6 +77,15 @@ public class PayloadDataTransmission {
         }
         Log.e(TAG, "payloadReceiveData: " + payloadReceiveData);
         String[] locationStr = payloadReceiveData.split(",");
+        if(locationStr.length != 3){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context, payloadReceiveData, Toast.LENGTH_SHORT).show();
+                }
+            });
+            return null;
+        }
         float[] location = new float[3];
         location[0] = Float.parseFloat(locationStr[0]);
         location[1] = Float.parseFloat(locationStr[1]);

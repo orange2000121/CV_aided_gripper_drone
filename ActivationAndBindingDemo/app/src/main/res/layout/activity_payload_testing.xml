@@ -85,6 +85,20 @@
                 android:layout_height="45dp"
                 android:text="get location" />
 
+            <Button
+                android:id="@+id/btn_open_gripper"
+                style="@style/button_style"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:text="open gripper" />
+
+            <Button
+                android:id="@+id/btn_close_gripper"
+                style="@style/button_style"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:text="close gripper" />
+
         </LinearLayout>
 
     </ScrollView>
