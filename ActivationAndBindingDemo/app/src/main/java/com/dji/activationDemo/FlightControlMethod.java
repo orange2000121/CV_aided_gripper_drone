@@ -12,6 +12,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
+import android.content.Context;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
@@ -32,9 +33,10 @@ public class FlightControlMethod extends AppCompatActivity {
     public boolean emg_now = false;// emergency button
     String TAG = FlightControlMethod.class.getName();
     public List<ArucoCoordinate> arucoCoordinateList=null; //current aruco coordinate list
-    private FlightController flightController; //flight controller from dji sdk
+    public FlightController flightController; //flight controller from dji sdk
     public int function_times = 0;
-    private PayloadDataTransmission payload = new PayloadDataTransmission();
+    private PayloadDataTransmission payload = new PayloadDataTransmission(FlightControlMethod.this);
+    private Context context = null;
     /* ------------------------------- Constructive ------------------------------- */
     public FlightControlMethod(){}
 
@@ -52,14 +54,16 @@ public class FlightControlMethod extends AppCompatActivity {
         this.arucoCoordinateList = arucoCoordinateList;
         return true;
     }
+    public boolean register(Context context){
+        if(context==null) return false;
+        this.context = context;
+        return true;
+    }
     /* -------------------------------------------------------------------------- */
     /*                                main activity                               */
     /* -------------------------------------------------------------------------- */
 
     public void test1(){
-        float x_offset = 1.0f;
-        float y_offset = 1.0f;
-        float z_offset = -1.8f;
         float payload_x_offset = 0.0f;
         float payload_y_offset = 0.0f;
         float payload_z_offset = 0.9f;
@@ -67,55 +71,46 @@ public class FlightControlMethod extends AppCompatActivity {
         if(emg_now) return;
         switchVirtualStickMode(true);
 //---------go to second aruco
-        ArucoCoordinate goal = findAruco(30);
-        goal = findAruco(30);
-        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
-        while (true) {
-            float[] loacation = payload.getBottomLocation();
-            if (max(abs(loacation[0]), max(abs(loacation[1]), abs(loacation[2]-payload_z_offset))) < 0.05f) break;
-            moveTo(loacation[0], loacation[1], -loacation[2]+payload_z_offset, 0.2f);
-        }
+//        moveTo(2f,2f,0);
+        payload.gripperControl(true);
+        flightAboveAruco(0, 0.08f, 0.9f, 2);
+        flightAboveAruco(0,0.08f,0.5f, 2);
+        flightAboveAruco(0,0.08f,0.25f, 2);
+//        flightAboveAruco(0,0.08f,0.185f,2);
+        moveTo(0,0,-0.07f,0.1f);
+        payload.gripperControl(false);
+        moveTo(0,0,1f,0.35f);
         switchVirtualStickMode(false);
     }
 
-    public void test1_1(){
-        float x_offset = -2.5f;
-        float y_offset = 1.5f;
-        float z_offset = -3.0f;
-        if(emg_now) return;
-        switchVirtualStickMode(true);
-        //-----------------go to first aruco
-        ArucoCoordinate goal = findAruco(23);
-        if(goal==null) return;
-        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
-        goal = findAruco(23);
-        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
-        goal = findAruco(23);
-        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+1.5f);
-        moveTo(0,4,0);
-        moveTo(0,4,0);
-        switchVirtualStickMode(false);
-    }
-    public void test1_2(){
-        if(emg_now) return;
-        switchVirtualStickMode(true);
-        float x_offset = -0.64f;
-        float y_offset = 1.0f;
-        float z_offset = -.95f;
-        //-----------------go to first aruco
-        ArucoCoordinate goal = findAruco(23);
-        if(goal==null) return;
-        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
-        goal = findAruco(23);
-        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
-        goal = findAruco(23);
-        for(int i=0;i<2;i++){
-            if(facingTheFront(goal)) break;
-            goal = findAruco(23);
+
+
+    public void flightAboveAruco(float payload_x_offset, float payload_y_offset, float payload_z_offset, int run_time) {
+        if (emg_now) return;
+        int count = 0, error_count = 0;
+        while (true) {
+            if (emg_now) return;
+            float[] location = payload.getBottomLocation();
+            if(location==null){
+                Log.w(TAG, "flightAboveAruco: location is null");
+                //show toast on ui thread
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "location is null", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                if(error_count++>5) break;
+                continue;
+            }
+            Log.i(TAG, "flightAboveAruco: "+location[0]+" "+location[1]+" "+location[2]);
+            float x = location[0] + payload_x_offset;
+            float y = -(location[1] + payload_y_offset);
+            float z = -location[2] + payload_z_offset;
+            if (max(abs(x), max(abs(y), abs(z))) < 0.02f) break;
+            if(count++>run_time) break;
+            moveTo(x, y, z, 0.1f);
         }
-        goal = findAruco(23);
-        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
-        switchVirtualStickMode(false);
     }
 
     public void startPos(){
@@ -140,125 +135,7 @@ public class FlightControlMethod extends AppCompatActivity {
         moveTo(goal.x, goal.z -1.5f, -goal.y+0.5f);
         switchVirtualStickMode(false);
     }
-    public void test2(){
-        if(emg_now) return;
-        switchVirtualStickMode(true);
-//---------go to second aruco
-        rotation(85);
-        ArucoCoordinate goal = findAruco(31);
-        if(goal==null) return;
-//        facingTheFront(goal);
-//        SystemClock.sleep(500);
-//        goal = findAruco(31);
-        moveTo((goal.x-0.38f)*0.3f, (goal.z-1)*0.3f, -goal.y+1);
-        goal = findAruco(31);
-//        facingTheFront(goal);
-//        goal = findAruco(31);
-        moveTo((goal.x-0.38f)*2/3, (goal.z -1)*2/3, -goal.y+.8f);
-//        goal = findAruco(31);
-//        facingTheFront(goal);
-//        goal = findAruco(31);
-//        moveTo(goal.x, goal.z -1.2, -goal.y+.8);
-        switchVirtualStickMode(false);
-    }
-    public void test2_1(){
-        float x_offset = -0.38f;
-        float y_offset = 1.0f;
-        float z_offset = -1.2f;
-        if(emg_now) return;
-        switchVirtualStickMode(true);
-//---------go to second aruco
-        rotation(90);
-        ArucoCoordinate goal = findAruco(31);
-        if(goal==null) return;
-        SystemClock.sleep(500);
-        goal = findAruco(31);
-        moveTo((goal.x+x_offset)/3, (goal.z+z_offset)/3, -goal.y+y_offset);
-        goal = findAruco(31);
-        moveTo((goal.x+x_offset)/3, (goal.z+z_offset)/3, -goal.y+y_offset);
-        goal = findAruco(31);
-        for (int i=0;i<2;i++){
-            if(facingTheFront(goal)) break;
-            goal = findAruco(31);
-        }
-        goal = findAruco(31);
-        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
-        switchVirtualStickMode(false);
-    }
-    public void test2_2(){
-        if(emg_now) return;
-        switchVirtualStickMode(true);
-        float x_offset = -1.4f;
-        float y_offset = 1.0f;
-        float z_offset = -1.0f;
-        //-----------------go to first aruco
-        rotation(-90);
-        ArucoCoordinate goal = findAruco(31);
-        if(goal==null) return;
-        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
-        goal = findAruco(31);
-        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, -goal.y+y_offset);
-        goal = findAruco(31);
-        for(int i=0;i<2;i++){
-            if(facingTheFront(goal)) break;
-            goal = findAruco(31);
-        }
-        goal = findAruco(31);
-        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
-        switchVirtualStickMode(false);
-    }
-    public void test3() {
-        float x_offset = 1.3f;
-        float y_offset = 0.8f;
-        float z_offset = -3f;
-        if(emg_now) return;
-        switchVirtualStickMode(true);
-//---------go to second aruco
-        ArucoCoordinate goal = findAruco(23);
-        if(goal==null) return;
-        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, (-goal.y+y_offset)/3);
-        goal = findAruco(23);
-        moveTo((goal.x+x_offset)/2, (goal.z+z_offset)/2, (-goal.y+y_offset)*2/3);
-        goal = findAruco(23);
-        facingTheFront(goal);
-        goal = findAruco(23);
-        moveTo(goal.x+x_offset, goal.z+z_offset, -goal.y+y_offset);
-        goal = findAruco(23);
-//        facingTheFront(goal);
-        switchVirtualStickMode(false);
-    }
 
-    public void test4() {
-        if(emg_now) return;
-        switchVirtualStickMode(true);
-        ArucoCoordinate aruco = findAruco(23);
-        if(aruco==null) return;
-        moveTo(0,0,0.7f) ;
-        findAruco(23);
-        facingTheFront(aruco);
-
-        moveTo(.4f,4.8f,0);
-        rotateTo(1.2, -180);
-        SystemClock.sleep(500);
-        yaw =10;
-        SystemClock.sleep(1000);
-        setZero();
-        aruco = findAruco(23);
-        moveTo(aruco.x+2.48f,0,0);
-        moveTo(0,0,0.8f);
-        moveTo(0,3,0 );
-        moveTo(0,2.5f,0 );
-
-//        rotateTo(-90);
-//        ArucoCoordinate goal =  findAruco(31);
-//        facingTheFront(goal);
-//        goal =  findAruco(31);
-//        moveTo(0,goal.z+2,0);
-
-        switchVirtualStickMode(false);
-
-
-    }
     public void goToArucoMarker(int aruco_id){
         if(emg_now) return;
         ArucoCoordinate goal_aruco = findAruco(aruco_id);
@@ -456,19 +333,20 @@ public class FlightControlMethod extends AppCompatActivity {
             return;
         };
         float distance = (float) sqrt(right_left_gap * right_left_gap + front_back_gap * front_back_gap + up_down_gap * up_down_gap);
-        float higher_speed = (float) max(abs(right_left_gap),max(abs(front_back_gap), abs(up_down_gap)) );
+        float higher_distance = (float) max(abs(right_left_gap),max(abs(front_back_gap), abs(up_down_gap)) );
         // if the distance is less than 1 meter, make the max speed smaller
-        if (higher_speed < 1) {
+        if (higher_distance < 1 && max_speed > 0.5f) {
             max_speed *= 0.5f;
         }
         roll = (float) front_back_gap / distance * max_speed;
         throttle = (float) up_down_gap / distance * max_speed;
         pitch = (float) right_left_gap / distance * max_speed;
+        double flying_time = distance / sqrt(roll * roll + pitch * pitch + throttle * throttle);
         Log.i(TAG, "roll: " + roll);
         Log.i(TAG, "pitch: " + pitch);
         Log.i(TAG, "throttle: " + throttle);
-        double flying_time = distance / sqrt(roll * roll + pitch * pitch + throttle * throttle);
-        if (flying_time > 10) {// if the flying time is too long, don't move
+        Log.i(TAG, "flying_time: " + flying_time);
+        if (distance > 5) {// if the distance is too long, don't move
             setZero();
         } else {
             SystemClock.sleep((long) (flying_time * 1000));// when the drone is moving, wait for the drone to move

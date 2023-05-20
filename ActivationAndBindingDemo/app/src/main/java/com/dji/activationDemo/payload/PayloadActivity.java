@@ -25,6 +25,7 @@ import dji.sdk.payload.Payload;
 import dji.sdk.useraccount.UserAccountManager;
 
 public class PayloadActivity extends AppCompatActivity implements View.OnClickListener{
+    private final String TAG = "PayloadActivity";
     private TextView pushUARTTextView;
     private TextView payloadNameView;
     private TextView pushUDPTextView;
@@ -48,7 +49,7 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
         pushUDPTextView = (TextView) findViewById(R.id.push_info_text_UDP);
         pushUARTTextView.setMovementMethod(new ScrollingMovementMethod());
 
-        dataTransmission = new PayloadDataTransmission();
+        dataTransmission = new PayloadDataTransmission(this);
         initListener();
     }
 
@@ -56,7 +57,8 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
         findViewById(R.id.sent_data).setOnClickListener(this);
         findViewById(R.id.login_sdk).setOnClickListener(this);
         findViewById(R.id.btn_location).setOnClickListener(this);
-
+        findViewById(R.id.btn_open_gripper).setOnClickListener(this);
+        findViewById(R.id.btn_close_gripper).setOnClickListener(this);
         if (ModuleVerificationUtil.isPayloadAvailable()) {
             if(usePayload){
                 payload = DemoApplication.getAircraftInstance().getPayload();
@@ -158,12 +160,26 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                 });
                 break;
             case R.id.btn_location:
+                if(dataTransmission.payload!=null){
+                    if(!dataTransmission.payload.isFeatureOpened()){
+                        Log.i(TAG, "payload feature is not opened");
+                        break;
+                    }else {
+                        Log.i(TAG, "payload feature is opened");
+                    }
+                }
                 float[] location = dataTransmission.getBottomLocation();
                 if(location != null) {
                     ToastUtils.showToast("location: " + location[0] + ", " + location[1] + ", " + location[2]);
                 }else{
                     ToastUtils.showToast("location is null");
                 }
+                break;
+            case R.id.btn_open_gripper:
+                dataTransmission.gripperControl(true);
+                break;
+            case R.id.btn_close_gripper:
+                dataTransmission.gripperControl(false);
                 break;
             default:
         }
