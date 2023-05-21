@@ -35,7 +35,7 @@ public class FlightControlMethod extends AppCompatActivity {
     public List<ArucoCoordinate> arucoCoordinateList=null; //current aruco coordinate list
     public FlightController flightController; //flight controller from dji sdk
     public int function_times = 0;
-    private PayloadDataTransmission payload = new PayloadDataTransmission(FlightControlMethod.this);
+    public PayloadDataTransmission payload = new PayloadDataTransmission(FlightControlMethod.this);
     private Context context = null;
     /* ------------------------------- Constructive ------------------------------- */
     public FlightControlMethod(){}

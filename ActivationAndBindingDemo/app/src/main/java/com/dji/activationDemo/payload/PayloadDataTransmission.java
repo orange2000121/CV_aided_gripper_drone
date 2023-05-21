@@ -77,7 +77,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
         }
         Log.e(TAG, "payloadReceiveData: " + payloadReceiveData);
         String[] locationStr = payloadReceiveData.split(",");
-        if(locationStr.length != 3){
+        if(locationStr.length != 6){
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -86,10 +86,14 @@ public class PayloadDataTransmission extends AppCompatActivity {
             });
             return null;
         }
-        float[] location = new float[3];
+        float[] location = new float[6];
         location[0] = Float.parseFloat(locationStr[0]);
         location[1] = Float.parseFloat(locationStr[1]);
         location[2] = Float.parseFloat(locationStr[2]);
+        location[3] = Float.parseFloat(locationStr[3]); //YAW
+        location[4] = Float.parseFloat(locationStr[4]);
+        location[5] = Float.parseFloat(locationStr[5]);
+
         if (location[0] == 0 && location[1] == 0 && location[2] == 0){
             Log.i(TAG, "getReceiveLocation: location is 0");
             return null;

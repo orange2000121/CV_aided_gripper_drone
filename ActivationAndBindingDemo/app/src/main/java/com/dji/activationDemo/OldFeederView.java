@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.TextureView;
 import android.widget.Button;
@@ -42,7 +41,6 @@ import java.util.TimerTask;
 
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.LEDsSettings;
-import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
 import dji.common.flightcontroller.virtualstick.RollPitchControlMode;
@@ -59,6 +57,7 @@ import dji.sdk.flightcontroller.FlightController;
 
 public class OldFeederView extends AppCompatActivity implements TextureView.SurfaceTextureListener {
     private static final String TAG = OldFeederView.class.getName();
+    private PayloadDataTransmission payload = new PayloadDataTransmission(OldFeederView.this);
     protected VideoFeeder.VideoDataListener mReceivedVideoDataListener = null;
     protected DJICodecManager mCodecManager = null;
 
@@ -164,6 +163,44 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_old_feeder_view);
         initUI();
+
+
+
+        flight_thread = new Thread(()->{
+            Float xb =null, yb=null,zb=null, yawb=null, pitchb=null, rollb=null;
+            while(true){
+
+                float[] bottomLocation = flight.payload.getBottomLocation();
+                if(bottomLocation != null){
+                    xb =bottomLocation[0]; yb=bottomLocation[1];zb=bottomLocation[2]; yawb=bottomLocation[3]; pitchb=bottomLocation[4]; rollb=bottomLocation[5];
+                }
+
+                if(bottomLocation == null){
+                    xb =null; yb=null;zb=null; yawb=null; pitchb=null; rollb=null;
+                }
+
+                Float finalXb = xb;
+                Float finalYb = yb;
+                Float finalZb = zb;
+                Float finalYawb = yawb;
+                Float finalRollb = rollb;
+                Float finalPitchb = pitchb;
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        showScreenTextBottom(finalXb,  finalYb,  finalZb,  finalYawb,  finalRollb, finalPitchb);
+
+                    }
+                });
+            }
+
+        });
+        flight_thread.start();
+
+
+
         initParams();
         droneStart();
         FlightController flightController = ModuleVerificationUtil.getFlightController();
@@ -508,21 +545,24 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         mImageSurface.setImageBitmap(BitmapFromFeedersSurface);
         if (!arucoMethod.current_arucos.isEmpty()) {
             ArucoCoordinate aruco = arucoMethod.current_arucos.get(0);
-            showScreenText(aruco.x, aruco.y, aruco.z, aruco.yaw, aruco.pitch, aruco.roll);
+            showScreenText( aruco.x,aruco.y, aruco.z, aruco.yaw, aruco.pitch, aruco.roll);
         }
         else{
             showScreenText(null,null,null,null,null,null);
         }
     }
 
-    void showScreenText(Float x, Float y, Float z, Float yaw, Float pitch, Float roll){
+    void showScreenText(Float x,Float y, Float z, Float yaw, Float pitch, Float roll){
 
+        //FPV CAMERA
         TextView theTextView1 = (TextView) findViewById(R.id.textView1);
         TextView theTextView2 = (TextView) findViewById(R.id.textView2);
         TextView theTextView3 = (TextView) findViewById(R.id.textView3);
         TextView theTextView4 = (TextView) findViewById(R.id.textView4);
         TextView theTextView5 = (TextView) findViewById(R.id.textView5);
         TextView theTextView6 = (TextView) findViewById(R.id.textView6);
+
+        //FPV CAMERA
         theTextView1.setText("X: " + x);
         theTextView2.setText("Y: " + y);
         theTextView3.setText("Z: " + z);
@@ -536,7 +576,35 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         theTextView5.setTextColor(Color.BLUE);
         theTextView6.setTextColor(Color.BLUE);
 
+
     }
+
+    Runnable showScreenTextBottom(Float xb, Float yb, Float zb, Float yawb, Float pitchb, Float rollb){
+        //BOTTOM CAMERA
+        TextView theTextView7 = (TextView) findViewById(R.id.textView7);
+        TextView theTextView8 = (TextView) findViewById(R.id.textView8);
+        TextView theTextView9 = (TextView) findViewById(R.id.textView9);
+        TextView theTextView10 = (TextView) findViewById(R.id.textView10);
+        TextView theTextView11 = (TextView) findViewById(R.id.textView11);
+        TextView theTextView12 = (TextView) findViewById(R.id.textView12);
+
+        //BOTTOM CAMERA
+        theTextView7.setText("X: " + xb);
+        theTextView8.setText("Y: " + yb);
+        theTextView9.setText("Z: " + zb);
+        theTextView12.setText("Roll: " + yawb);
+        theTextView11.setText("Pitch: " + rollb);
+        theTextView10.setText("Yaw: " + pitchb);
+        theTextView7.setTextColor(Color.YELLOW);
+        theTextView8.setTextColor(Color.YELLOW);
+        theTextView9.setTextColor(Color.YELLOW);
+        theTextView12.setTextColor(Color.YELLOW);
+        theTextView11.setTextColor(Color.YELLOW);
+        theTextView10.setTextColor(Color.YELLOW);
+
+        return null;
+    }
+
 
 
     //Todo : 移動到呼叫的地方
