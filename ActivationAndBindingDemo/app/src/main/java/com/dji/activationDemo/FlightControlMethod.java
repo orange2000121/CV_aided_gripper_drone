@@ -19,11 +19,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.dji.activationDemo.payload.PayloadActivity;
 import com.dji.activationDemo.payload.PayloadDataTransmission;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
-
-import org.opencv.core.Core;
 
 import java.util.List;
 
@@ -63,33 +60,84 @@ public class FlightControlMethod extends AppCompatActivity {
     /*                                main activity                               */
     /* -------------------------------------------------------------------------- */
 
-    public void test1(){
+    public void takeBall(){
         float payload_x_offset = 0.0f;
-        float payload_y_offset = 0.0f;
+        float payload_y_offset = -0.07f;
         float payload_z_offset = 0.9f;
 
         if(emg_now) return;
         switchVirtualStickMode(true);
 //---------go to second aruco
-//        moveTo(2f,2f,0);
         payload.gripperControl(true);
-        flightAboveAruco(0, 0.08f, 0.9f, 2);
-        flightAboveAruco(0,0.08f,0.5f, 2);
-        flightAboveAruco(0,0.08f,0.25f, 2);
-//        flightAboveAruco(0,0.08f,0.185f,2);
-        moveTo(0,0,-0.07f,0.1f);
+        flightAboveAruco(0, -0.07f, 0.9f, 1);
+        flightAboveAruco(0,-0.07f,0.5f, 1);
+        flightAboveAruco(0,-0.07f,0.3f, 1);
+        moveTo(0,0,-0.09f,0.1f);
         payload.gripperControl(false);
-        moveTo(0,0,1f,0.35f);
+        SystemClock.sleep(500);
+        moveTo(0,0,1.5f,0.35f);
+    }
+
+    public void demo1(){
+        if (emg_now) return;
+        switchVirtualStickMode(true);
+        float start_orientation = getOrientation();
+        SystemClock.sleep(500);
+        takeOff();
+        SystemClock.sleep(6000);
+        moveTo(2,2,0);
+        SystemClock.sleep(500);
+        takeBall();
+        SystemClock.sleep(500);
+        float end_orientation = getOrientation();
+        float delta = end_orientation - start_orientation;
+        if(delta>180) delta -= 360;
+        if(delta<-180) delta += 360;
+        rotation(-delta);
+        SystemClock.sleep(500);
+        moveTo(-2,1,0);
+        moveTo(0,1,0,1);
+        payload.gripperControl(true);
+        moveTo(0,2.5f,0,0.8f);
+        SystemClock.sleep(500);
+//        landing();
         switchVirtualStickMode(false);
     }
 
-
+    public void demo2(){
+        if (emg_now) return;
+        switchVirtualStickMode(true);
+        float start_orientation = getOrientation();
+        SystemClock.sleep(500);
+        takeOff();
+        SystemClock.sleep(6000);
+        //go to ball
+        moveTo(2,2,0);
+        SystemClock.sleep(500);
+        takeBall();
+        SystemClock.sleep(500);
+        float end_orientation = getOrientation();
+        float delta = end_orientation - start_orientation;
+        if(delta>180) delta -= 360;
+        if(delta<-180) delta += 360;
+        rotation(-delta);
+        SystemClock.sleep(500);
+        //go to fire
+        moveTo(1.5f,1,0);
+        moveTo(0,1.5f,0,1);
+        payload.gripperControl(true);
+        moveTo(0,3f,0,0.8f);
+        SystemClock.sleep(500);
+        switchVirtualStickMode(false);
+        landing();
+    }
 
     public void flightAboveAruco(float payload_x_offset, float payload_y_offset, float payload_z_offset, int run_time) {
         if (emg_now) return;
         int count = 0, error_count = 0;
         while (true) {
             if (emg_now) return;
+            if(count++>run_time) break;
             float[] location = payload.getBottomLocation();
             if(location==null){
                 Log.w(TAG, "flightAboveAruco: location is null");
@@ -100,15 +148,18 @@ public class FlightControlMethod extends AppCompatActivity {
                         Toast.makeText(context, "location is null", Toast.LENGTH_SHORT).show();
                     }
                 });
+                moveTo(0,0,0.02f,0.05f);
                 if(error_count++>5) break;
                 continue;
             }
             Log.i(TAG, "flightAboveAruco: "+location[0]+" "+location[1]+" "+location[2]);
-            float x = location[0] + payload_x_offset;
-            float y = -(location[1] + payload_y_offset);
+
+            float x = (location[0] + payload_x_offset);
+            float y = -(location[1] - payload_y_offset);
             float z = -location[2] + payload_z_offset;
+            float yaw = location[3];
             if (max(abs(x), max(abs(y), abs(z))) < 0.02f) break;
-            if(count++>run_time) break;
+            rotation(yaw);
             moveTo(x, y, z, 0.1f);
         }
     }
@@ -367,6 +418,7 @@ public class FlightControlMethod extends AppCompatActivity {
     private void rotation(double yaw_angle){
         if(emg_now) return;
         float yaw_speed = 15;
+        if(abs(yaw_angle) < yaw_speed) yaw_speed = (float) abs(yaw_angle);
         double time = abs(yaw_angle / yaw_speed);
         yaw = yaw_angle < 0 ? -yaw_speed : yaw_speed;
         SystemClock.sleep((long) time * 1000);
@@ -379,6 +431,29 @@ public class FlightControlMethod extends AppCompatActivity {
                 ToastUtils.setResultToToast(djiError.getDescription());
             } else {
                 showToast("VS Enabled");
+            }
+        });
+    }
+    private float getOrientation(){
+        return flightController.getCompass().getHeading();
+    }
+    private void takeOff(){
+        if(emg_now) return;
+        flightController.startTakeoff(djiError -> {
+            if (djiError != null) {
+               Log.e(TAG, "takeOff: " + djiError.getDescription());
+            } else {
+                Log.i(TAG, "takeOff: success");
+            }
+        });
+    }
+    private void landing(){
+        if(emg_now) return;
+        flightController.startLanding(djiError -> {
+            if (djiError != null) {
+                Log.e(TAG, "landing: " + djiError.getDescription());
+            } else {
+                Log.i(TAG, "landing: success");
             }
         });
     }

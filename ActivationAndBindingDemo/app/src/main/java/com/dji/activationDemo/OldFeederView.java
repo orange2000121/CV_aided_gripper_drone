@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.TextureView;
 import android.widget.Button;
@@ -166,38 +167,36 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
 
 
-        flight_thread = new Thread(()->{
-            Float xb =null, yb=null,zb=null, yawb=null, pitchb=null, rollb=null;
-            while(true){
+//        new Thread(()->{
+//            Float xb =null, yb=null,zb=null, yawb=null, pitchb=null, rollb=null;
+//            while(true){
+//                if(flight.payload == null) continue;
+//                float[] bottomLocation = flight.payload.getBottomLocation();
+//                if(bottomLocation != null){
+//                    xb =bottomLocation[0]; yb=bottomLocation[1];zb=bottomLocation[2]; yawb=bottomLocation[3]; rollb=bottomLocation[4]; pitchb=bottomLocation[5];
+//                }
+//
+//                if(bottomLocation == null){
+//                    xb =null; yb=null;zb=null; yawb=null; pitchb=null; rollb=null;
+//                }
+//
+//                Float finalXb = xb;
+//                Float finalYb = yb;
+//                Float finalZb = zb;
+//                Float finalYawb = yawb;
+//                Float finalRollb = rollb;
+//                Float finalPitchb = pitchb;
+//
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        showScreenTextBottom(finalXb,  finalYb,  finalZb,  finalYawb,  finalRollb, finalPitchb);
+//                    }
+//                });
+//                SystemClock.sleep(500);
+//            }
+//        }).start();
 
-                float[] bottomLocation = flight.payload.getBottomLocation();
-                if(bottomLocation != null){
-                    xb =bottomLocation[0]; yb=bottomLocation[1];zb=bottomLocation[2]; yawb=bottomLocation[3]; pitchb=bottomLocation[4]; rollb=bottomLocation[5];
-                }
-
-                if(bottomLocation == null){
-                    xb =null; yb=null;zb=null; yawb=null; pitchb=null; rollb=null;
-                }
-
-                Float finalXb = xb;
-                Float finalYb = yb;
-                Float finalZb = zb;
-                Float finalYawb = yawb;
-                Float finalRollb = rollb;
-                Float finalPitchb = pitchb;
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        showScreenTextBottom(finalXb,  finalYb,  finalZb,  finalYawb,  finalRollb, finalPitchb);
-
-                    }
-                });
-            }
-
-        });
-        flight_thread.start();
 
 
 
@@ -277,6 +276,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
         ArucoBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
+                flight.demo2();
             });
             flight_thread.start();
         });
@@ -285,8 +285,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             flight_thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    flight.test1();
-
+                    flight.takeBall();
                 }
             });
             flight_thread.start();
@@ -592,9 +591,9 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         theTextView7.setText("X: " + xb);
         theTextView8.setText("Y: " + yb);
         theTextView9.setText("Z: " + zb);
-        theTextView12.setText("Roll: " + yawb);
-        theTextView11.setText("Pitch: " + rollb);
-        theTextView10.setText("Yaw: " + pitchb);
+        theTextView12.setText("Yaw: " + yawb);
+        theTextView11.setText("Roll: " + rollb);
+        theTextView10.setText("Pitch: " + pitchb);
         theTextView7.setTextColor(Color.YELLOW);
         theTextView8.setTextColor(Color.YELLOW);
         theTextView9.setTextColor(Color.YELLOW);

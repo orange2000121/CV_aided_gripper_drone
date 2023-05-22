@@ -78,12 +78,12 @@ public class PayloadDataTransmission extends AppCompatActivity {
         Log.e(TAG, "payloadReceiveData: " + payloadReceiveData);
         String[] locationStr = payloadReceiveData.split(",");
         if(locationStr.length != 6){
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(context, payloadReceiveData, Toast.LENGTH_SHORT).show();
-                }
-            });
+//            runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Toast.makeText(context, payloadReceiveData, Toast.LENGTH_SHORT).show();
+//                }
+//            });
             return null;
         }
         float[] location = new float[6];
