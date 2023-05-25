@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.TextureView;
 import android.widget.Button;
@@ -285,7 +284,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             flight_thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    flight.takeBall();
+                    flight.testTakeBall();
                 }
             });
             flight_thread.start();

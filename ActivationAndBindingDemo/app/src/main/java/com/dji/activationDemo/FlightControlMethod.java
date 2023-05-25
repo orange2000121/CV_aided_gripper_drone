@@ -22,7 +22,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.dji.activationDemo.payload.PayloadDataTransmission;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 
 public class FlightControlMethod extends AppCompatActivity {
@@ -34,8 +37,14 @@ public class FlightControlMethod extends AppCompatActivity {
     public int function_times = 0;
     public PayloadDataTransmission payload = new PayloadDataTransmission(FlightControlMethod.this);
     private Context context = null;
+    private final Map<Float,List<Float>> param_of_bottom_aruco = new HashMap<Float,List<Float>>();
     /* ------------------------------- Constructive ------------------------------- */
-    public FlightControlMethod(){}
+    public FlightControlMethod(){
+        param_of_bottom_aruco.put(25f, List.of(0.166f,0.1525f));
+        param_of_bottom_aruco.put(26f, List.of(0.18f,-0.1395f));
+        param_of_bottom_aruco.put(27f, List.of(-0.175f,-0.1525f));
+        param_of_bottom_aruco.put(28f, List.of(-0.1495f,0.1525f));
+    }
 
     /**
      * @param flightController : flight controller from dji sdk
@@ -69,13 +78,33 @@ public class FlightControlMethod extends AppCompatActivity {
         switchVirtualStickMode(true);
 //---------go to second aruco
         payload.gripperControl(true);
-        flightAboveAruco(0, -0.07f, 0.9f, 1);
-        flightAboveAruco(0,-0.07f,0.5f, 1);
-        flightAboveAruco(0,-0.07f,0.3f, 1);
+        flightAboveAruco(0, -0.07f, 0.9f, 1,0.2f);
+        flightAboveAruco(0,-0.07f,0.5f, 1,0.15f);
+        flightAboveAruco(0,-0.07f,0.3f, 1,0.1f);
         moveTo(0,0,-0.09f,0.1f);
         payload.gripperControl(false);
         SystemClock.sleep(500);
         moveTo(0,0,1.5f,0.35f);
+    }
+    public void testTakeBall(){
+        float payload_x_offset = 0.0f;
+        float payload_y_offset = -0.07f;
+        float payload_z_offset = 0.9f;
+
+        if(emg_now) return;
+        switchVirtualStickMode(true);
+//---------go to second aruco
+        payload.gripperControl(true);
+        flightAboveAruco(-0.12f, -0.07f, 0.9f, 1,0.2f);
+        flightAboveAruco(-0.12f, -0.07f, 0.7f, 1,0.2f);
+        flightAboveAruco(-0.12f,-0.07f,0.5f, 1,0.15f);
+        flightAboveAruco(-0.12f,-0.07f,0.35f, 1,0.1f);
+        moveTo(0,0,-0.14f,0.1f);
+        payload.gripperControl(false);
+        SystemClock.sleep(500);
+        payload.gripperControl(true);
+        SystemClock.sleep(500);
+        moveTo(0,0,0.5f,0.35f);
     }
 
     public void demo1(){
@@ -131,14 +160,40 @@ public class FlightControlMethod extends AppCompatActivity {
         switchVirtualStickMode(false);
         landing();
     }
+    public void demo3(){
+        if (emg_now) return;
+        switchVirtualStickMode(true);
+        float start_orientation = getOrientation();
+        SystemClock.sleep(500);
+        takeOff();
+        SystemClock.sleep(6000);
+        //go to ball
+        moveTo(2,2,0);
+        SystemClock.sleep(500);
+        takeBall();
+        SystemClock.sleep(500);
+        float end_orientation = getOrientation();
+        float delta = end_orientation - start_orientation;
+        if(delta>180) delta -= 360;
+        if(delta<-180) delta += 360;
+        rotation(-delta);
+        SystemClock.sleep(500);
+        //go to fire
+        moveTo(1.5f,1,0);
+        throughBall(0,2,0);
+        moveTo(0,3f,0,0.8f);
+        SystemClock.sleep(500);
+        switchVirtualStickMode(false);
+        landing();
+    }
 
-    public void flightAboveAruco(float payload_x_offset, float payload_y_offset, float payload_z_offset, int run_time) {
+    public void flightAboveAruco(float payload_x_offset, float payload_y_offset, float payload_z_offset, int run_time,float speed){
         if (emg_now) return;
         int count = 0, error_count = 0;
         while (true) {
             if (emg_now) return;
             if(count++>run_time) break;
-            float[] location = payload.getBottomLocation();
+            Float[] location = payload.getBottomLocation();
             if(location==null){
                 Log.w(TAG, "flightAboveAruco: location is null");
                 //show toast on ui thread
@@ -148,19 +203,58 @@ public class FlightControlMethod extends AppCompatActivity {
                         Toast.makeText(context, "location is null", Toast.LENGTH_SHORT).show();
                     }
                 });
-                moveTo(0,0,0.02f,0.05f);
+                moveTo(0,0,0.1f,0.1f);
+                count--;
                 if(error_count++>5) break;
                 continue;
             }
             Log.i(TAG, "flightAboveAruco: "+location[0]+" "+location[1]+" "+location[2]);
-
-            float x = (location[0] + payload_x_offset);
-            float y = -(location[1] - payload_y_offset);
+            runOnUiThread(()->{
+                Toast.makeText(context, "x: "+location[0]+"\ny: "+location[1]+"\nz: "+location[2], Toast.LENGTH_SHORT).show();
+            });
+            float id = location[6];
+            float x = (location[0] + payload_x_offset) - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(0);
+            float y = -(location[1] - payload_y_offset) - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(1);
             float z = -location[2] + payload_z_offset;
             float yaw = location[3];
             if (max(abs(x), max(abs(y), abs(z))) < 0.02f) break;
             rotation(yaw);
-            moveTo(x, y, z, 0.1f);
+//            runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Toast.makeText(context, "x: "+x+"\ny: "+y+"\nz: "+z, Toast.LENGTH_SHORT).show();
+//                }
+//            });
+            Log.i(TAG, "PreMoveTo: "+x+" "+y+" "+z);
+            if(speed>0.2f){
+                speed = 0.2f;
+            }
+            moveTo(x, y, z, speed);
+        }
+    }
+
+    public void throughBall(float init_x, float init_y, float init_z){
+        if(emg_now) return;
+        payload.findCircleLocation();
+        int breakpoint_num = 10;
+        for (int i=0;i<breakpoint_num;i++){
+            if(emg_now) return;
+            float[] location = payload.getCircleLocation();
+            float x,y,z;
+            x = init_x/breakpoint_num;
+            y = init_y/breakpoint_num;
+            z = init_z/breakpoint_num;
+            if(location == null){
+                moveTo(x,y,z);
+            }else{
+                if(abs(location[0])<0.2 && location[1] < 0.2){
+                    moveTo(x,y,z);
+                }else if(abs(location[0])>=0.2 && location[1] < 0.2){
+                    moveTo(location[0],y,z);
+                }else{
+                    break;
+                }
+            }
         }
     }
 

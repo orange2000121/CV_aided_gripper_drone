@@ -99,6 +99,20 @@
                 android:layout_height="45dp"
                 android:text="close gripper" />
 
+            <Button
+                android:id="@+id/btn_get_circle"
+                style="@style/button_style"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:text="get circle" />
+
+            <Button
+                android:id="@+id/btn_stop_circle"
+                style="@style/button_style"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:text="stop circle" />
+
         </LinearLayout>
 
     </ScrollView>

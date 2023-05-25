@@ -59,6 +59,8 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
         findViewById(R.id.btn_location).setOnClickListener(this);
         findViewById(R.id.btn_open_gripper).setOnClickListener(this);
         findViewById(R.id.btn_close_gripper).setOnClickListener(this);
+        findViewById(R.id.btn_get_circle).setOnClickListener(this);
+        findViewById(R.id.btn_stop_circle).setOnClickListener(this);
         if (ModuleVerificationUtil.isPayloadAvailable()) {
             if(usePayload){
                 payload = DemoApplication.getAircraftInstance().getPayload();
@@ -147,17 +149,18 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                 finish();
                 break;
             case R.id.login_sdk:
-                UserAccountManager.getInstance().logIntoDJIUserAccount(this, new CommonCallbacks.CompletionCallbackWith<UserAccountState>() {
-                      @Override
-                      public void onSuccess(final UserAccountState userAccountState) {
-                          ToastUtils.showToast("login success! status=" + userAccountState.name());
-                      }
-
-                      @Override
-                      public void onFailure(DJIError error) {
-                          ToastUtils.showToast(error.getDescription());
-                      }
-                });
+//                UserAccountManager.getInstance().logIntoDJIUserAccount(this, new CommonCallbacks.CompletionCallbackWith<UserAccountState>() {
+//                      @Override
+//                      public void onSuccess(final UserAccountState userAccountState) {
+//                          ToastUtils.showToast("login success! status=" + userAccountState.name());
+//                      }
+//
+//                      @Override
+//                      public void onFailure(DJIError error) {
+//                          ToastUtils.showToast(error.getDescription());
+//                      }
+//                });
+                dataTransmission.findCircleLocation();
                 break;
             case R.id.btn_location:
                 if(dataTransmission.payload!=null){
@@ -168,9 +171,9 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                         Log.i(TAG, "payload feature is opened");
                     }
                 }
-                float[] location = dataTransmission.getBottomLocation();
+                Float[] location = dataTransmission.getBottomLocation();
                 if(location != null) {
-                    ToastUtils.showToast("location: " + location[0] + ", " + location[1] + ", " + location[2]);
+                    ToastUtils.showToast(location[6] + ": " + location[0] + ", " + location[1] + ", " + location[2]);
                 }else{
                     ToastUtils.showToast("location is null");
                 }
@@ -180,6 +183,17 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.btn_close_gripper:
                 dataTransmission.gripperControl(false);
+                break;
+            case R.id.btn_get_circle:
+                float[] circle = dataTransmission.getCircleLocation();
+                if(circle != null) {
+                    ToastUtils.showToast("circle: " + circle[0] + ", " + circle[1] + ", " + circle[2]);
+                }else{
+                    ToastUtils.showToast("circle is null");
+                }
+                break;
+            case R.id.btn_stop_circle:
+                dataTransmission.stopFindCircleLocation();
                 break;
             default:
         }
