@@ -58,8 +58,9 @@ public class PayloadDataTransmission extends AppCompatActivity {
                 @Override
                 public void onGetCommandData(byte[] bytes) {
                     String temp = ViewHelper.getString(bytes);
-                    linkReceiveData(temp);
-                    Log.i(TAG, "raw receive data: " + payloadReceiveData);
+//                    linkReceiveData(temp);
+                    payloadReceiveData = temp;
+                    Log.i(TAG, "raw receive data: " + temp);
                 }
             });
         }
@@ -116,7 +117,25 @@ public class PayloadDataTransmission extends AppCompatActivity {
             }
         }).start();
     }
-    public float[] getCircleLocation(){return circle_location;}
+
+    public float[] getCircleLocation(){
+        sendDataToPayload(Constants.findCircle);
+        //get current time
+        long startTime = System.currentTimeMillis();
+        while (payloadReceiveData.equals("")){
+            //wait for the data to be received
+            if (System.currentTimeMillis() - startTime > 1000){
+                //if the data is not received in 3 second, return null
+                return null;
+            }
+        }
+        String[] temp = payloadReceiveData.split(",");
+        payloadReceiveData = "";
+        if(temp.length != 2) return null;
+        float x = Float.parseFloat(temp[0]), y = Float.parseFloat(temp[1]);
+        if(x == 0 && y == 0) return null;
+        return new float[] {x, y};
+    }
     public void stopFindCircleLocation(){
         findCircleLocationFlag = false;
         sendDataToPayload(Constants.stopFindCircle);
@@ -124,16 +143,19 @@ public class PayloadDataTransmission extends AppCompatActivity {
 
     public Float[] getBottomLocation(){
         Float[] tempLocation = getReceiveLocation();
-        SystemClock.sleep(500);
+        SystemClock.sleep(300);
         Float[] tempLocation2 = getReceiveLocation();
         if(tempLocation == null || tempLocation2 == null){
+            return null;
+        }
+        if(!Objects.equals(tempLocation[6], tempLocation2[6])){
             return null;
         }
         float deltaX = tempLocation[0] - tempLocation2[0], deltaY = tempLocation[1] - tempLocation2[1], deltaZ = tempLocation[2] - tempLocation2[2];
         if(max(deltaX, max(deltaY, deltaZ)) > 0.1){
             return null;
         }
-        return tempLocation2;
+        return tempLocation;
     }
     public Float[] getReceiveLocation(){
         sendDataToPayload(Constants.getLocation);

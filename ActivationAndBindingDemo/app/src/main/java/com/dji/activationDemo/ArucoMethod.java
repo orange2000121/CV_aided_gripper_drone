@@ -65,7 +65,7 @@ public class ArucoMethod {
     /* -------------------------------------------------------------------------- */
     public Bitmap ArucoDetector(Bitmap BitmapFromFeedersSurface) {
 
-        float MarkerSize_mm = (float) 0.182;  //A4 paper
+        float MarkerSize_mm = (float) 0.179;  //A4 paper
 
         List<Mat> corners = new ArrayList<>();
         Mat droneImage = new Mat();

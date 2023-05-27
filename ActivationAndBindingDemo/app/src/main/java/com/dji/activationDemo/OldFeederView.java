@@ -283,8 +283,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         MoveTo.setOnClickListener(v -> {
             flight_thread = new Thread(new Runnable() {
                 @Override
-                public void run() {
-                    flight.testTakeBall();
+                final public void run() {
+                    flight.takeBall();
                 }
             });
             flight_thread.start();

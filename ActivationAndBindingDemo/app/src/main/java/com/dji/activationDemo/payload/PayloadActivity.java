@@ -187,7 +187,7 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
             case R.id.btn_get_circle:
                 float[] circle = dataTransmission.getCircleLocation();
                 if(circle != null) {
-                    ToastUtils.showToast("circle: " + circle[0] + ", " + circle[1] + ", " + circle[2]);
+                    ToastUtils.showToast("circle: " + circle[0] + ", " + circle[1]);
                 }else{
                     ToastUtils.showToast("circle is null");
                 }
