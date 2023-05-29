@@ -40,13 +40,14 @@ public class FlightControlMethod extends AppCompatActivity {
     private final Map<Float,List<Float>> param_of_bottom_aruco = new HashMap<Float,List<Float>>();
     /* ------------------------------- Constructive ------------------------------- */
     public FlightControlMethod(){
-        param_of_bottom_aruco.put(25f, List.of(0.166f,0.1525f));
-        param_of_bottom_aruco.put(26f, List.of(0.18f,-0.1395f));
-        param_of_bottom_aruco.put(27f, List.of(-0.175f,-0.1525f));
-        param_of_bottom_aruco.put(28f, List.of(-0.1495f,0.1525f));
+//                                           In cm not m
+        param_of_bottom_aruco.put(25f, List.of(-0.1535f,0.134f));
+        param_of_bottom_aruco.put(26f, List.of(0.1535f,0.134f));
+        param_of_bottom_aruco.put(27f, List.of(0.1535f,-0.134f));
+        param_of_bottom_aruco.put(28f, List.of(-0.1535f,-0.134f));
 //        param_of_bottom_aruco.put(25f, List.of(0.15f,0.118f));
 //        param_of_bottom_aruco.put(26f, List.of(0.143f,-0.16f));
-//        param_of_bottom_aruco.put(27f, List.of(-0.099f,-0.093f));
+//        param_of_bottom_aruco.put(27f, List.of(-0.0455f,-0.145f));
 //        param_of_bottom_aruco.put(28f, List.of(-0.165f,0.12f));
     }
 
@@ -73,19 +74,39 @@ public class FlightControlMethod extends AppCompatActivity {
     /*                                main activity                               */
     /* -------------------------------------------------------------------------- */
 
-    public void takeBall(){
+    public void takeBall(float high){
         if(emg_now) return;
         switchVirtualStickMode(true);
 //---------go to second aruco
         payload.gripperControl(true);
 //        flightAboveAruco(-0.12f, -0.07f, 0.9f, 1,0.2f);
-        flightAboveAruco(-0.12f, -0.07f, 0.7f, 1,0.1f);
-        flightAboveAruco(-0.12f,-0.07f,0.5f, 1,0.1f);
-        flightAboveAruco(-0.12f,-0.07f,0.35f, 1,0.1f);
+        boolean arrived = flightAboveAruco(-0.08f, -0.02f, high, 1,0.1f);
+        if(arrived==true) {
+            moveTo(0, 0, -high + 0.20f, 0.1f);
+            payload.gripperControl(false);
+            SystemClock.sleep(500);
+            Log.i(TAG, "takeBall: 1");
+
+            return;
+        }
+
+        arrived = flightAboveAruco(-0.08f,-0.02f,(high+0.35f)/2, 1,0.1f);
+        if(arrived==true) {
+            moveTo(0, 0, -high + 0.35f, 0.1f);
+            payload.gripperControl(false);
+            SystemClock.sleep(500);
+            Log.i(TAG, "takeBall: 1");
+
+            return;
+        }
+        for(int i=0;i<10;i++){
+            if (arrived==false)
+                arrived = flightAboveAruco(-0.08f,-0.02f,0.35f, 1,0.1f);
+            else
+                break;
+        }
         moveTo(0,0,-0.13f,0.1f);
         payload.gripperControl(false);
-        SystemClock.sleep(500);
-        payload.gripperControl(true);
         SystemClock.sleep(500);
         moveTo(0,0,0.3f,0.35f);
     }
@@ -119,7 +140,7 @@ public class FlightControlMethod extends AppCompatActivity {
         SystemClock.sleep(6000);
         moveTo(2,2,0);
         SystemClock.sleep(500);
-        takeBall();
+        takeBall(0.7f);
         moveTo(0,0,0.5f,0.35f);
         SystemClock.sleep(500);
         float end_orientation = getOrientation();
@@ -147,7 +168,7 @@ public class FlightControlMethod extends AppCompatActivity {
         //go to ball
         moveTo(2,2,0);
         SystemClock.sleep(500);
-        takeBall();
+        takeBall(0.7f);
         moveTo(0,0,0.5f,0.35f);
         SystemClock.sleep(500);
         float end_orientation = getOrientation();
@@ -175,7 +196,7 @@ public class FlightControlMethod extends AppCompatActivity {
         //go to ball
         moveTo(2,2,0);
         SystemClock.sleep(500);
-        takeBall();
+        takeBall(0.7f);
         moveTo(0,0,0.5f,0.35f);
         SystemClock.sleep(500);
         float end_orientation = getOrientation();
@@ -192,56 +213,82 @@ public class FlightControlMethod extends AppCompatActivity {
         switchVirtualStickMode(false);
         landing();
     }
+    void turnCompassAngle(float angle,float origin_orientation){
+        if(emg_now) return;
+        float end_orientation = getOrientation();
+        float delta = end_orientation - origin_orientation;
+        delta = -angle - delta;
+        if(delta>180) delta -= 360;
+        if(delta<-180) delta += 360;
+        rotation(-delta);
+    }
     public void agvDemo(){
         if (emg_now) return;
+        payload.gripperControl(false);
         switchVirtualStickMode(true);
-//        float start_orientation = getOrientation();
-//        takeOff();
-//        SystemClock.sleep(6000);
-//        moveTo(2,2,0,0.5f);
-//        takeBall();
-//        moveTo(0,0,0.5f,0.35f);
-//        // 轉回初始角度
-//        float end_orientation = getOrientation();
-//        float delta = end_orientation - start_orientation;
-//        if(delta>180) delta -= 360;
-//        if(delta<-180) delta += 360;
-//        rotation(-delta);
-//        SystemClock.sleep(500);
-//        //go to fire
-//        moveTo(-2,1,0);
-//        moveTo(0,2,0);
-//        payload.gripperControl(true);
-//        moveTo(0,1f,0,0.8f);
-//        SystemClock.sleep(500);
+        SystemClock.sleep(500);
+        float start_orientation = getOrientation();
+        takeOff();
+        SystemClock.sleep(6000);
+        float end_orientation = getOrientation();
+        float delta = end_orientation - start_orientation;
+        if(delta>180) delta -= 360;
+        if(delta<-180) delta += 360;
+        rotation(-delta);
+//        //-------go to fire
+        moveTo(1.4f,1,0,0.5f);
+        moveTo(0,1.93f,0);
+        payload.gripperControl(true);
+        moveTo(1.7f,0.6f,0);
 //        //go to agv
-//        rotation(90);
-        ArucoCoordinate goal = findAruco(25);
+        ArucoCoordinate goal = findAruco(14);
+//        ArucoCoordinate fire_position = new ArucoCoordinate(goal.x,goal.y,goal.z,goal.yaw,goal.pitch,goal.roll,goal.id);
         if(goal!=null){
-            moveTo(goal.x,goal.y/2,goal.z+0.7f);
+            moveTo(goal.x-0.40f,(goal.z-1.8f),-goal.y+1f);
         }
-        goal = findAruco(25);
+        goal = findAruco(14);
         if(goal!=null){
-            moveTo(goal.x,goal.y+0.5f,goal.z+0.7f);
+            moveTo(goal.x-0.40f,goal.z,-goal.y+1f);
         }
-        takeBall();
-//        goal = findAruco(31);
-//        if(goal!=null){
-//            moveTo(goal.x,goal.y,goal.z+0.7f);
+        takeBall(0.6f);
+        end_orientation = getOrientation();
+        delta = end_orientation - start_orientation;
+        if(delta>180) delta -= 360;
+        if(delta<-180) delta += 360;
+        rotation(-delta);
+        //go back to fire
+//        moveTo(goal.x-fire_position.x,goal.z-fire_position.z,0);
+//        moveTo(-2.12f,-2.55f,0f,0.35f);
+//        for(int i=0;i<3;i++){
+//            goal = findAruco(14);
+//            if(goal!=null){
+//                if((goal.x-1.9f)<0.10 && (goal.z-2.58f)<0.1) break;
+//                moveTo(goal.x-1.9f,goal.z-2.58f,0,0.2f);
+//            }
 //        }
-//        payload.gripperControl(false);
-//        SystemClock.sleep(500);
-//        moveTo(0,0,0.5f,0.35f);
+        rotation(90);
+        moveTo(2.73f,2.85f,0);
+        payload.gripperControl(true);
+        SystemClock.sleep(500);
+
+
+
+
+        //------------go home
+        moveTo(0,2.5f,0);
+        landing();
+        switchVirtualStickMode(false);
     }
-    public void flightAboveAruco(float payload_x_offset, float payload_y_offset, float payload_z_offset, int run_time,float speed){
-        if (emg_now) return;
+    public boolean flightAboveAruco(float payload_x_offset, float payload_y_offset, float payload_z_offset, int run_time,float speed){
+        if (emg_now) return false;
         int count = 0, error_count = 0;
         while (true) {
-            if (emg_now) return;
+            if (emg_now) return false;
             if(count++>run_time) break;
             Float[] location = payload.getBottomLocation();
+
             if(location==null){
-                Log.w(TAG, "flightAboveAruco: location is null");
+                Log.w(TAG, "=2222: location is null");
                 //show toast on ui thread
                 runOnUiThread(new Runnable() {
                     @Override
@@ -254,24 +301,37 @@ public class FlightControlMethod extends AppCompatActivity {
                 if(error_count++>2) break;
                 continue;
             }
-            Log.i(TAG, "flightAboveAruco: "+location[0]+" "+location[1]+" "+location[2]);
+            Log.i(TAG, "flightAboveAruco: 22 "+location[0]+" "+location[1]+" "+location[2]);
             runOnUiThread(()->{
                 Toast.makeText(context, "x: "+location[0]+"\ny: "+location[1]+"\nz: "+location[2], Toast.LENGTH_SHORT).show();
             });
+//            List<Float> bottom_aruco = Arrays.asList(25f,26f,27f,28f);
             float id = location[6];
             float x = location[0] + payload_x_offset - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(0);
             float y = -location[1] + payload_y_offset - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(1);
             float z = -location[2] + payload_z_offset;
             float yaw = location[3];
-            if (max(abs(x), max(abs(y), abs(z))) < 0.02f)
-                break;
+
+
+            if (max(abs(x), abs(y)) <= 0.05f){
+                float x_inverse = x*-0.2f;
+                float y_inverse =y*-0.2f;
+                moveTo(x,y,z,0.1f);
+                SystemClock.sleep(200);
+                Log.i(TAG, "INSIDE 10cm DIFF "+"X DIFF"+(abs(x) - abs(x_inverse)) +" Y DIFF"+(abs(y) - abs(y_inverse)));
+
+                return true;
+            }
+
             rotation(yaw);
             Log.i(TAG, "PreMoveTo: " + x + " " + y + " " + z);
             if(speed>0.2f){
                 speed = 0.2f;
             }
             moveTo(x, y, z, speed);
+
         }
+        return false;
     }
 
     public void throughBall(float init_x, float init_y, float init_z){
@@ -560,7 +620,7 @@ public class FlightControlMethod extends AppCompatActivity {
         setZero();
 
     }
-    private void rotation(double yaw_angle){
+    public void rotation(double yaw_angle){
         if(emg_now) return;
         float yaw_speed = 15;
         if(abs(yaw_angle) < yaw_speed) yaw_speed = (float) abs(yaw_angle);
@@ -579,7 +639,7 @@ public class FlightControlMethod extends AppCompatActivity {
             }
         });
     }
-    private float getOrientation(){
+    public float getOrientation(){
         return flightController.getCompass().getHeading();
     }
     private void takeOff(){

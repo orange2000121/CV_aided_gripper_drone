@@ -52,6 +52,7 @@ import dji.common.util.CommonCallbacks;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
+import dji.sdk.flightcontroller.Compass;
 import dji.sdk.flightcontroller.FlightAssistant;
 import dji.sdk.flightcontroller.FlightController;
 
@@ -231,7 +232,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         });
         TakeOffBtn.setOnClickListener(v -> flightController.startTakeoff(djiError -> showToast("taking off")));
         LandBtn.setOnClickListener(v -> flightController.startLanding(djiError -> showToast("Landing")));
-        YawBtn.setOnClickListener(v -> SetYaw(50,3000));
+        YawBtn.setOnClickListener(v -> flight.rotation(90));
 
         EmergencyBtn.setOnClickListener(v -> {
             flight.emergency();
@@ -275,7 +276,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
         ArucoBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.demo2();
+                flight.agvDemo();
             });
             flight_thread.start();
         });
@@ -284,7 +285,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             flight_thread = new Thread(new Runnable() {
                 @Override
                 final public void run() {
-                    flight.takeBall();
+                    flight.takeBall(0.7f);
                 }
             });
             flight_thread.start();
@@ -559,6 +560,10 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         TextView theTextView4 = (TextView) findViewById(R.id.textView4);
         TextView theTextView5 = (TextView) findViewById(R.id.textView5);
         TextView theTextView6 = (TextView) findViewById(R.id.textView6);
+        TextView theTextView7 = (TextView) findViewById(R.id.textView7);
+
+
+
 
         //FPV CAMERA
         theTextView1.setText("X: " + x);
@@ -567,12 +572,17 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         theTextView6.setText("Roll: " + roll);
         theTextView5.setText("Pitch: " + pitch);
         theTextView4.setText("Yaw: " + yaw);
+
         theTextView1.setTextColor(Color.BLUE);
         theTextView2.setTextColor(Color.BLUE);
         theTextView3.setTextColor(Color.BLUE);
         theTextView4.setTextColor(Color.BLUE);
         theTextView5.setTextColor(Color.BLUE);
         theTextView6.setTextColor(Color.BLUE);
+        if(flight != null){
+            theTextView7.setText("orientation: " + flight.getOrientation());
+            theTextView7.setTextColor(Color.BLUE);
+        }
 
 
     }

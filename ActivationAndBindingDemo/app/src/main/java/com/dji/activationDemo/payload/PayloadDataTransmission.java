@@ -169,6 +169,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
             }
         }
         Log.i(TAG, "getReceiveLocation: " + payloadReceiveData);
+        if(payloadReceiveData.equals("null")) return null;
         Gson gson = new Gson();
         JsonArray jsonArray = gson.fromJson(payloadReceiveData, JsonArray.class);
         if (jsonArray != null) {
