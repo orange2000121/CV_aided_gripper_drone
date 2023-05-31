@@ -323,13 +323,13 @@ public class FlightControlMethod extends AppCompatActivity {
                 return true;
             }
 
-            rotation(yaw);
             Log.i(TAG, "PreMoveTo: " + x + " " + y + " " + z);
             if(speed>0.2f){
                 speed = 0.2f;
             }
             moveTo(x, y, z, speed);
-
+            SystemClock.sleep(300);
+            rotation(yaw);
         }
         return false;
     }
