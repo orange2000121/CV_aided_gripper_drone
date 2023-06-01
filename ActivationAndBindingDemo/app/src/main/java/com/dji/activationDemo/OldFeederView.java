@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.TextureView;
 import android.widget.Button;
@@ -245,13 +246,33 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         });
         //SetForward(50,1000);
         ForwardBtn.setOnClickListener(v -> {
-            flight.moveTo(0,2,0);
+            flight_thread = new Thread(()->{
+                flightController.setVirtualStickAdvancedModeEnabled(true);
+                flight.moveTo(1,-1.5f,0);
+                SystemClock.sleep(500);
+                flight.moveTo(-1,1.5f,0);
+                flightController.setVirtualStickAdvancedModeEnabled(false);
+            });
+            flight_thread.start();
         });
         BackwardsBtn.setOnClickListener(v -> {
-            flight.moveTo(0,-2,0);
-        });
+            flight_thread = new Thread(()->{
+                flightController.setVirtualStickAdvancedModeEnabled(true);
+                flight.moveTo(1,-0.5f,0);
+                SystemClock.sleep(500);
+                flight.moveTo(-1,0.5f,0);
+                flightController.setVirtualStickAdvancedModeEnabled(false);
+            });
+            flight_thread.start();        });
         RightBtn.setOnClickListener(v -> {
-            flight.moveTo(1,0,0);
+            flight_thread = new Thread(()->{
+                flightController.setVirtualStickAdvancedModeEnabled(true);
+                flight.moveTo(-0.5f,-1f,0);
+                SystemClock.sleep(500);
+                flight.moveTo(0.5f,1f,0);
+                flightController.setVirtualStickAdvancedModeEnabled(false);
+            });
+            flight_thread.start();
         });
         LeftBtn.setOnClickListener(v -> {
             flight.moveTo(-1,0,0);
