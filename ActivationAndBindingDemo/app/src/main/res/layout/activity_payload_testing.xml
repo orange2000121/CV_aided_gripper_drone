@@ -37,11 +37,11 @@
             android:visibility="visible">
 
             <Button
+                android:id="@+id/throw_ball"
                 style="@style/button_style"
-                android:id="@+id/login_sdk"
                 android:layout_width="200dip"
                 android:layout_height="45dp"
-                android:text="Login" />
+                android:text="throw ball" />
 
             <Button
                 style="@style/button_style"

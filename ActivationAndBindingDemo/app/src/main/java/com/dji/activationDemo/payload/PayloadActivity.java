@@ -18,11 +18,7 @@ import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.utils.ViewHelper;
 
-import dji.common.error.DJIError;
-import dji.common.useraccount.UserAccountState;
-import dji.common.util.CommonCallbacks;
 import dji.sdk.payload.Payload;
-import dji.sdk.useraccount.UserAccountManager;
 
 public class PayloadActivity extends AppCompatActivity implements View.OnClickListener{
     private final String TAG = "PayloadActivity";
@@ -55,7 +51,7 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
 
     private void initListener() {
         findViewById(R.id.sent_data).setOnClickListener(this);
-        findViewById(R.id.login_sdk).setOnClickListener(this);
+        findViewById(R.id.throw_ball).setOnClickListener(this);
         findViewById(R.id.btn_location).setOnClickListener(this);
         findViewById(R.id.btn_open_gripper).setOnClickListener(this);
         findViewById(R.id.btn_close_gripper).setOnClickListener(this);
@@ -148,19 +144,8 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                 this.startActivity(intent);
                 finish();
                 break;
-            case R.id.login_sdk:
-//                UserAccountManager.getInstance().logIntoDJIUserAccount(this, new CommonCallbacks.CompletionCallbackWith<UserAccountState>() {
-//                      @Override
-//                      public void onSuccess(final UserAccountState userAccountState) {
-//                          ToastUtils.showToast("login success! status=" + userAccountState.name());
-//                      }
-//
-//                      @Override
-//                      public void onFailure(DJIError error) {
-//                          ToastUtils.showToast(error.getDescription());
-//                      }
-//                });
-                dataTransmission.findCircleLocation();
+            case R.id.throw_ball:
+                dataTransmission.throwBll();
                 break;
             case R.id.btn_location:
                 if(dataTransmission.payload!=null){
@@ -185,7 +170,7 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                 dataTransmission.gripperControl(false);
                 break;
             case R.id.btn_get_circle:
-                float[] circle = dataTransmission.getCircleLocation();
+                Float[] circle = dataTransmission.getCircleLocation();
                 if(circle != null) {
                     ToastUtils.showToast("circle: " + circle[0] + ", " + circle[1]);
                 }else{

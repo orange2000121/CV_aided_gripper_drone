@@ -283,31 +283,33 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         });
         DownBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.calib();
+                flight.switchVirtualStickMode(true);
+                Float[] location = payload.getBottomLocation();
+                if (location == null) return;
+                Log.i("location",location.toString());
+                flight.moveTo(0, 0, -location[2]+.22f, 0.1f);
+                flight.switchVirtualStickMode(false);
             });
             flight_thread.start();
         });
 
         mBtnStart.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.startPos();
+                payload.gripperControl(true);
             });
             flight_thread.start();
         });
 
         ArucoBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
-                flight.agvDemo();
+                flight.throughBall(0,4,0);
             });
             flight_thread.start();
         });
 
         MoveTo.setOnClickListener(v -> {
-            flight_thread = new Thread(new Runnable() {
-                @Override
-                final public void run() {
-                    flight.takeBall(0.7f);
-                }
+            flight_thread = new Thread(() -> {
+                flight.demo3();
             });
             flight_thread.start();
         });

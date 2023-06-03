@@ -49,6 +49,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
         static final String isReceived = "received";
         static final String findCircle = "circle";
         static final String stopFindCircle = "stop_circle";
+        static final String throwBall = "throw";
     }
 
     private void initListener() {
@@ -97,28 +98,8 @@ public class PayloadDataTransmission extends AppCompatActivity {
 
     float[] circle_location;
     boolean findCircleLocationFlag = false;
-    public void findCircleLocation(){
-        findCircleLocationFlag = true;
-        sendDataToPayload(Constants.findCircle);
-        new Thread(()->{
-            while(findCircleLocationFlag){
-                if(payloadReceiveData.equals("")) continue;
-                if(payloadReceiveData.equals("null")) {
-                    circle_location = null;
-                    continue;
-                }
-                String[] temp = payloadReceiveData.split(",");
-                if(temp.length != 2) {
-                    circle_location = null;
-                    continue;
-                }
-                circle_location =new float[] {Float.parseFloat(temp[0]), Float.parseFloat(temp[1])};
-                Log.i(TAG, "findCircleLocation: " + circle_location[0] + " " + circle_location[1]);
-            }
-        }).start();
-    }
 
-    public float[] getCircleLocation(){
+    public Float[] getCircleLocation(){
         sendDataToPayload(Constants.findCircle);
         //get current time
         long startTime = System.currentTimeMillis();
@@ -129,12 +110,30 @@ public class PayloadDataTransmission extends AppCompatActivity {
                 return null;
             }
         }
-        String[] temp = payloadReceiveData.split(",");
+        if(payloadReceiveData.equals("(null)")) return null;
+        if(payloadReceiveData.equals("null")) return null;
+        if(payloadReceiveData.equals("[]")) return null;
+
+        Log.i(TAG, "getCircleLocation: " + payloadReceiveData);
+        Gson gson = new Gson();
+        JsonArray jsonArray = gson.fromJson(payloadReceiveData, JsonArray.class);
+        if(jsonArray == null) return null;
+        if(jsonArray.size() == 0) return null;
         payloadReceiveData = "";
-        if(temp.length != 2) return null;
-        float x = Float.parseFloat(temp[0]), y = Float.parseFloat(temp[1]);
-        if(x == 0 && y == 0) return null;
-        return new float[] {x, y};
+        for (JsonElement jsonElement : jsonArray) {
+            Float[] circle = new Float[2];
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            if(jsonObject.get("x_coor").getAsString().equals("nan")) continue;
+            circle[0] = jsonObject.get("x_coor").getAsFloat();
+            circle[1] = jsonObject.get("y_coor").getAsFloat();
+            Log.i(TAG, "getCircleLocation: " + circle[0] + " " + circle[1]);
+            if(circle[0] == 0 && circle[1] == 0) return null;
+            return circle;
+        }
+        return null;
+    }
+    public void throwBll(){
+        sendDataToPayload(Constants.throwBall);
     }
     public void stopFindCircleLocation(){
         findCircleLocationFlag = false;
@@ -163,17 +162,17 @@ public class PayloadDataTransmission extends AppCompatActivity {
         long startTime = System.currentTimeMillis();
         while (payloadReceiveData.equals("")){
             //wait for the data to be received
-            if (System.currentTimeMillis() - startTime > 1000){
+            if (System.currentTimeMillis() - startTime > 1500){
                 //if the data is not received in 3 second, return null
                 return null;
             }
         }
-        Log.i(TAG, "getReceiveLocation: " + payloadReceiveData);
+        if(payloadReceiveData.equals("(null)")) return null;
         if(payloadReceiveData.equals("null")) return null;
+        if(payloadReceiveData.equals("[]")) return null;
         Gson gson = new Gson();
         JsonArray jsonArray = gson.fromJson(payloadReceiveData, JsonArray.class);
         if (jsonArray != null) {
-            Log.i(TAG, "jsonArray: " + jsonArray.size());
             if(jsonArray.size() == 0){
                 return null;
             }
