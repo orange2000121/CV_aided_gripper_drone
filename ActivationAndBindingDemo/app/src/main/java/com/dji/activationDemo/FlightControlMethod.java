@@ -77,7 +77,7 @@ public class FlightControlMethod extends AppCompatActivity {
 
     public void takeBall(float high){
 
-        float min_high = 0.45f, ball_high = 0.22f;
+        float min_high = 0.45f, ball_high = 0.20f;
         if(emg_now) return;
         switchVirtualStickMode(true);
 //---------go to second aruco
@@ -386,7 +386,7 @@ public class FlightControlMethod extends AppCompatActivity {
             }else{
                 Log.i(TAG, "throughBall: "+location[0]+" "+location[1]);
                 Log.i(TAG,"Sup");
-                if(abs(location[0])<0.2 && abs(location[1])< 0.2){
+                if(abs(location[0])-0.12f<0.2 && abs(location[1])-0.07f< 0.2){
                     payload.gripperControl(true);
                     setZero();
                     break;
