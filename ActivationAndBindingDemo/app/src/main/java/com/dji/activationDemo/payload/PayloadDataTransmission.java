@@ -34,12 +34,23 @@ public class PayloadDataTransmission extends AppCompatActivity {
     private static final String TAG = "PayloadDataTransmission";
     public Payload payload = null;
     private Context context = null;
-
     public String payloadReceiveData = "";
+    private String lastRequest = "";
+    private final Map<Float,List<Float>> param_of_bottom_aruco = new HashMap<Float,List<Float>>();
 
     /*constructor*/
     public PayloadDataTransmission(Context context){
         this.context = context;
+        //-----marker lenth: 0.058m
+        param_of_bottom_aruco.put(25f, List.of(-0.1535f,0.134f));
+        param_of_bottom_aruco.put(26f, List.of(0.1535f,0.134f));
+        param_of_bottom_aruco.put(27f, List.of(0.1535f,-0.134f));
+        param_of_bottom_aruco.put(28f, List.of(-0.1535f,-0.134f));
+        //-----marker lenth: 0.03m
+//        param_of_bottom_aruco.put(25f, List.of(0.15f,0.118f));
+//        param_of_bottom_aruco.put(26f, List.of(0.143f,-0.16f));
+//        param_of_bottom_aruco.put(27f, List.of(-0.0455f,-0.145f));
+//        param_of_bottom_aruco.put(28f, List.of(-0.165f,0.12f));
         initListener();
     }
     static class Constants{
@@ -50,6 +61,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
         static final String findCircle = "circle";
         static final String stopFindCircle = "stop_circle";
         static final String throwBall = "throw";
+        static final String gripBall = "grip";
     }
 
     private void initListener() {
@@ -101,6 +113,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
 
     public Float[] getCircleLocation(){
         sendDataToPayload(Constants.findCircle);
+        lastRequest = Constants.findCircle;
         //get current time
         long startTime = System.currentTimeMillis();
         while (payloadReceiveData.equals("")){
@@ -123,6 +136,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
         for (JsonElement jsonElement : jsonArray) {
             Float[] circle = new Float[2];
             JsonObject jsonObject = jsonElement.getAsJsonObject();
+            if(jsonObject.get("x_coor") == null) continue;
             if(jsonObject.get("x_coor").getAsString().equals("nan")) continue;
             circle[0] = jsonObject.get("x_coor").getAsFloat();
             circle[1] = jsonObject.get("y_coor").getAsFloat();
@@ -132,32 +146,42 @@ public class PayloadDataTransmission extends AppCompatActivity {
         }
         return null;
     }
-    public void throwBll(){
-        sendDataToPayload(Constants.throwBall);
-    }
+//    public void throwBll(){
+//        sendDataToPayload(Constants.throwBall);
+//        lastRequest = Constants.throwBall;
+//    }
     public void stopFindCircleLocation(){
         findCircleLocationFlag = false;
         sendDataToPayload(Constants.stopFindCircle);
+        lastRequest = Constants.stopFindCircle;
     }
 
     public Float[] getBottomLocation(){
+//        Float[] tempLocation = getReceiveLocation();
+//        SystemClock.sleep(300);
+//        Float[] tempLocation2 = getReceiveLocation();
+//        if(tempLocation == null || tempLocation2 == null){
+//            return null;
+//        }
+//        if(!Objects.equals(tempLocation[6], tempLocation2[6])){
+//            return null;
+//        }
+//        float deltaX = tempLocation[0] - tempLocation2[0], deltaY = tempLocation[1] - tempLocation2[1], deltaZ = tempLocation[2] - tempLocation2[2];
+//        if(max(deltaX, max(deltaY, deltaZ)) > 0.1){
+//            return null;
+//        }
         Float[] tempLocation = getReceiveLocation();
-        SystemClock.sleep(300);
-        Float[] tempLocation2 = getReceiveLocation();
-        if(tempLocation == null || tempLocation2 == null){
-            return null;
-        }
-        if(!Objects.equals(tempLocation[6], tempLocation2[6])){
-            return null;
-        }
-        float deltaX = tempLocation[0] - tempLocation2[0], deltaY = tempLocation[1] - tempLocation2[1], deltaZ = tempLocation[2] - tempLocation2[2];
-        if(max(deltaX, max(deltaY, deltaZ)) > 0.1){
-            return null;
-        }
+        float id = tempLocation[6];
+        tempLocation[0] = tempLocation[0] - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(0);
+        tempLocation[1] = -tempLocation[1] - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(1);
         return tempLocation;
     }
     public Float[] getReceiveLocation(){
         sendDataToPayload(Constants.getLocation);
+        if(!lastRequest.equals(Constants.getLocation)){
+            SystemClock.sleep(300);
+        }
+        lastRequest = Constants.getLocation;
         //get current time
         long startTime = System.currentTimeMillis();
         while (payloadReceiveData.equals("")){
@@ -183,7 +207,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
         for (JsonElement jsonElement : jsonArray) {
             Float[] location = new Float[7];
             JsonObject jsonObject = jsonElement.getAsJsonObject();
-
+            if(jsonObject.get("x") == null) continue;
             if(jsonObject.get("x").getAsString().equals("nan")) continue;
             location[0] = jsonObject.get("x").getAsFloat();
             location[1] = jsonObject.get("y").getAsFloat();
@@ -197,15 +221,60 @@ public class PayloadDataTransmission extends AppCompatActivity {
         return null;
     }
 
+    public void startGripBall(){
+        sendDataToPayload(Constants.gripBall);
+        lastRequest = Constants.gripBall;
+    }
+    public boolean getGripStatus(){
+        JsonArray jsonArray = analyzeReceiveData();
+        if(jsonArray == null) return false;
+        for (JsonElement jsonElement : jsonArray) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            if(jsonObject.get("triggered") == null) continue;
+            if(jsonObject.get("triggered").getAsString().equals("nan")) continue;
+            Log.i(TAG, "getGripStatus: " + jsonObject.get("triggered").getAsBoolean());
+            return jsonObject.get("triggered").getAsBoolean();
+        }
+        return false;
+    }
+
     /**
      * @param isGripperOpen The boolean value to control the gripper open or close.
      */
     public void gripperControl(boolean isGripperOpen){
         if (isGripperOpen) {
             sendDataToPayload(Constants.openGripper);
+            lastRequest = Constants.openGripper;
         } else {
             sendDataToPayload(Constants.closeGripper);
+            lastRequest = Constants.closeGripper;
         }
+    }
+
+    private JsonArray analyzeReceiveData(){
+        long startTime = System.currentTimeMillis();
+        while (payloadReceiveData.equals("")){
+            //wait for the data to be received
+            if (System.currentTimeMillis() - startTime > 1500){
+                //if the data is not received in 3 second, return null
+                return null;
+            }
+        }
+        if(payloadReceiveData.equals("(null)")) return null;
+        if(payloadReceiveData.equals("null")) return null;
+        if(payloadReceiveData.equals("[]")) return null;
+        Gson gson = new Gson();
+        JsonArray jsonArray = gson.fromJson(payloadReceiveData, JsonArray.class);
+        payloadReceiveData = "";
+        if (jsonArray != null) {
+            if(jsonArray.size() == 0){
+                return null;
+            }
+        }else {
+            payloadReceiveData = "";
+            return null;
+        }
+        return jsonArray;
     }
 
     /**

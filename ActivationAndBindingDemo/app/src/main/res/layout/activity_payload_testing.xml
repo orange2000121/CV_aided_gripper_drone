@@ -37,11 +37,11 @@
             android:visibility="visible">
 
             <Button
-                android:id="@+id/throw_ball"
+                android:id="@+id/btn_trigger_status"
                 style="@style/button_style"
                 android:layout_width="200dip"
                 android:layout_height="45dp"
-                android:text="throw ball" />
+                android:text="trigger status" />
 
             <Button
                 style="@style/button_style"
@@ -112,6 +112,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="45dp"
                 android:text="stop circle" />
+
+            <Button
+                android:id="@+id/btn_grip"
+                style="@style/button_style"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:text="grip" />
 
         </LinearLayout>
 

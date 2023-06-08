@@ -13,7 +13,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
 import android.content.Context;
-import android.nfc.Tag;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
@@ -23,10 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.dji.activationDemo.payload.PayloadDataTransmission;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 
 public class FlightControlMethod extends AppCompatActivity {
@@ -38,14 +34,14 @@ public class FlightControlMethod extends AppCompatActivity {
     public int function_times = 0;
     public PayloadDataTransmission payload = new PayloadDataTransmission(FlightControlMethod.this);
     private Context context = null;
-    private final Map<Float,List<Float>> param_of_bottom_aruco = new HashMap<Float,List<Float>>();
+//    private final Map<Float,List<Float>> param_of_bottom_aruco = new HashMap<Float,List<Float>>();
     /* ------------------------------- Constructive ------------------------------- */
     public FlightControlMethod(){
 //                                           In cm not m
-        param_of_bottom_aruco.put(25f, List.of(-0.1535f,0.134f));
-        param_of_bottom_aruco.put(26f, List.of(0.1535f,0.134f));
-        param_of_bottom_aruco.put(27f, List.of(0.1535f,-0.134f));
-        param_of_bottom_aruco.put(28f, List.of(-0.1535f,-0.134f));
+//        param_of_bottom_aruco.put(25f, List.of(-0.1535f,0.134f));
+//        param_of_bottom_aruco.put(26f, List.of(0.1535f,0.134f));
+//        param_of_bottom_aruco.put(27f, List.of(0.1535f,-0.134f));
+//        param_of_bottom_aruco.put(28f, List.of(-0.1535f,-0.134f));
 //        param_of_bottom_aruco.put(25f, List.of(0.15f,0.118f));
 //        param_of_bottom_aruco.put(26f, List.of(0.143f,-0.16f));
 //        param_of_bottom_aruco.put(27f, List.of(-0.0455f,-0.145f));
@@ -95,8 +91,10 @@ public class FlightControlMethod extends AppCompatActivity {
 //                y_aru =location[1];
                 z_aru =location[2];
                 Log.i(TAG, "aruco z distance: "+z_aru);
+                payload.startGripBall(); //開始偵測是否碰到payload
                 moveTo(0, 0, -z_aru + ball_high, 0.15f);
-                payload.gripperControl(false);
+                if(!payload.getGripStatus()) continue;
+                payload.gripperControl(false);// 獲得觸碰狀態
                 SystemClock.sleep(500);
 //                moveTo(0,0,1);
                 Log.i(TAG, "takeBall: 1");
@@ -340,10 +338,8 @@ public class FlightControlMethod extends AppCompatActivity {
             runOnUiThread(()->{
                 Toast.makeText(context, "x: "+location[0]+"\ny: "+location[1]+"\nz: "+location[2], Toast.LENGTH_SHORT).show();
             });
-//            List<Float> bottom_aruco = Arrays.asList(25f,26f,27f,28f);
-            float id = location[6];
-            float x = location[0] + payload_x_offset - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(0);
-            float y = -location[1] + payload_y_offset - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(1);
+            float x = location[0] + payload_x_offset;
+            float y = location[1] + payload_y_offset;
             float z = -location[2] + payload_z_offset;
             float yaw = location[3];
 
