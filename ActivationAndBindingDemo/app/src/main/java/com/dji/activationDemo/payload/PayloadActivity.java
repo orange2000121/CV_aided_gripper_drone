@@ -51,12 +51,13 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
 
     private void initListener() {
         findViewById(R.id.sent_data).setOnClickListener(this);
-        findViewById(R.id.throw_ball).setOnClickListener(this);
+        findViewById(R.id.btn_trigger_status).setOnClickListener(this);
         findViewById(R.id.btn_location).setOnClickListener(this);
         findViewById(R.id.btn_open_gripper).setOnClickListener(this);
         findViewById(R.id.btn_close_gripper).setOnClickListener(this);
         findViewById(R.id.btn_get_circle).setOnClickListener(this);
         findViewById(R.id.btn_stop_circle).setOnClickListener(this);
+        findViewById(R.id.btn_grip).setOnClickListener(this);
         if (ModuleVerificationUtil.isPayloadAvailable()) {
             if(usePayload){
                 payload = DemoApplication.getAircraftInstance().getPayload();
@@ -144,9 +145,6 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                 this.startActivity(intent);
                 finish();
                 break;
-            case R.id.throw_ball:
-                dataTransmission.throwBll();
-                break;
             case R.id.btn_location:
                 if(dataTransmission.payload!=null){
                     if(!dataTransmission.payload.isFeatureOpened()){
@@ -180,6 +178,12 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
             case R.id.btn_stop_circle:
                 dataTransmission.stopFindCircleLocation();
                 break;
+            case R.id.btn_grip:
+                dataTransmission.startGripBall();
+                break;
+            case R.id.btn_trigger_status:
+                boolean status = dataTransmission.getGripStatus();
+                ToastUtils.showToast("grip status: " + status);
             default:
         }
     }
