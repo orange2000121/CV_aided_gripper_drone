@@ -80,7 +80,7 @@ public class FlightControlMethod extends AppCompatActivity {
         payload.gripperControl(true);
         flightAboveAruco(-0.12f, -0.07f, 0.7f, 1,0.2f);
         float x_aru, y_aru, z_aru;
-        for(int i=0;i<10;i++){
+        for(int i=0;i<1;i++){
             if(emg_now) return;
             boolean is_above = flightAboveAruco(-0.08f, -0.02f, 0.45f, 1, 0.15f);
             SystemClock.sleep(250);
