@@ -182,8 +182,8 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                 dataTransmission.startGripBall();
                 break;
             case R.id.btn_trigger_status:
-                boolean status = dataTransmission.getGripStatus();
-                ToastUtils.showToast("grip status: " + status);
+                Float distance = dataTransmission.getSonarDistance();
+                ToastUtils.showToast("distance: " + distance);
             default:
         }
     }

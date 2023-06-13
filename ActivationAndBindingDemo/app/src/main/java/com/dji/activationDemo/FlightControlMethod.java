@@ -73,16 +73,16 @@ public class FlightControlMethod extends AppCompatActivity {
 
     public void takeBall(float high){
 
-        float min_high = 0.45f, ball_high = 0.20f;
+        float min_high = 0.45f, ball_high = 0.18f;
         if(emg_now) return;
         switchVirtualStickMode(true);
 //---------go to second aruco
         payload.gripperControl(true);
         flightAboveAruco(-0.12f, -0.07f, 0.7f, 1,0.2f);
         float x_aru, y_aru, z_aru;
-        for(int i=0;i<1;i++){
+        for(int i=0;i<10;i++){
             if(emg_now) return;
-            boolean is_above = flightAboveAruco(-0.08f, -0.02f, 0.45f, 1, 0.15f);
+            boolean is_above = flightAboveAruco(-0.08f, -0.02f, 0.55f, 1, 0.15f);
             SystemClock.sleep(250);
             if (is_above) {
                 Float[] location = payload.getBottomLocation();
@@ -93,8 +93,8 @@ public class FlightControlMethod extends AppCompatActivity {
                 Log.i(TAG, "aruco z distance: "+z_aru);
                 payload.startGripBall(); //開始偵測是否碰到payload
                 moveTo(0, 0, -z_aru + ball_high, 0.15f);
-                if(!payload.getGripStatus()) continue;
-                payload.gripperControl(false);// 獲得觸碰狀態
+                if(!payload.getGripStatus()) continue;// 獲得觸碰狀態
+                payload.gripperControl(false);
                 SystemClock.sleep(500);
 //                moveTo(0,0,1);
                 Log.i(TAG, "takeBall: 1");
@@ -239,7 +239,34 @@ public class FlightControlMethod extends AppCompatActivity {
         rotation(-delta);
         SystemClock.sleep(500);
         //go to fire
-        moveTo(1.33f,1,0);
+        moveTo(1.33f,1,0,0.35f);
+        throughBall(0,4,0);
+        moveTo(0,3f,0,0.5f);
+        SystemClock.sleep(500);
+        landing();
+        switchVirtualStickMode(false);
+    }
+    public void demo3ib(){
+        if (emg_now) return;
+        switchVirtualStickMode(true);
+        float start_orientation = getOrientation();
+        SystemClock.sleep(300);
+        takeOff();
+        SystemClock.sleep(6000);
+        //go to ball
+        moveTo(1.5f,1.5f,0);
+        SystemClock.sleep(300);
+        takeBall(0.7f);
+        moveTo(0,0,1.3f,0.35f);
+        SystemClock.sleep(300);
+        float end_orientation = getOrientation();
+        float delta = end_orientation - start_orientation;
+        if(delta>180) delta -= 360;
+        if(delta<-180) delta += 360;
+        rotation(-delta);
+        SystemClock.sleep(500);
+        //go to fire
+        moveTo(2f,1,0,0.35f);
         throughBall(0,4,0);
         moveTo(0,3f,0,0.5f);
         SystemClock.sleep(500);

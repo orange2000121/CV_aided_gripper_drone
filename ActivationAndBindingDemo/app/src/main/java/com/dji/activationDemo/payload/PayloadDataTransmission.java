@@ -62,6 +62,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
         static final String stopFindCircle = "stop_circle";
         static final String throwBall = "throw";
         static final String gripBall = "grip";
+        static final String sonarDistance = "sonar";
     }
 
     private void initListener() {
@@ -171,7 +172,9 @@ public class PayloadDataTransmission extends AppCompatActivity {
 //            return null;
 //        }
         Float[] tempLocation = getReceiveLocation();
+        if(tempLocation == null) return null;
         float id = tempLocation[6];
+        if(id != 25 && id != 26 && id != 27 && id !=28) return null;
         tempLocation[0] = tempLocation[0] - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(0);
         tempLocation[1] = -tempLocation[1] - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(1);
         return tempLocation;
@@ -237,6 +240,23 @@ public class PayloadDataTransmission extends AppCompatActivity {
         }
         return false;
     }
+    public Float getSonarDistance(){
+        if(!lastRequest.equals(Constants.sonarDistance)){
+            SystemClock.sleep(300);
+        }
+        sendDataToPayload(Constants.sonarDistance);
+        lastRequest = Constants.sonarDistance;
+        JsonArray jsonArray = analyzeReceiveData();
+        if(jsonArray == null) return null;
+        for (JsonElement jsonElement : jsonArray) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            if(jsonObject.get("sonar") == null) continue;
+            if(jsonObject.get("sonar").getAsString().equals("nan")) continue;
+            Log.i(TAG, "getSonarDistance: " + jsonObject.get("sonar").getAsFloat());
+            return jsonObject.get("sonar").getAsFloat();
+        }
+        return null;
+    }
 
     /**
      * @param isGripperOpen The boolean value to control the gripper open or close.
@@ -271,7 +291,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
                 return null;
             }
         }else {
-            payloadReceiveData = "";
+//            payloadReceiveData = "";
             return null;
         }
         return jsonArray;
