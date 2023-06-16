@@ -41,12 +41,12 @@ public class PayloadDataTransmission extends AppCompatActivity {
     /*constructor*/
     public PayloadDataTransmission(Context context){
         this.context = context;
-        //-----marker lenth: 0.058m
-        param_of_bottom_aruco.put(25f, List.of(-0.1535f,0.134f));
-        param_of_bottom_aruco.put(26f, List.of(0.1535f,0.134f));
-        param_of_bottom_aruco.put(27f, List.of(0.1535f,-0.134f));
-        param_of_bottom_aruco.put(28f, List.of(-0.1535f,-0.134f));
-        //-----marker lenth: 0.03m
+//        //-----marker lenth: 0.058m
+//        param_of_bottom_aruco.put(25f, List.of(-0.1535f,0.134f));
+//        param_of_bottom_aruco.put(26f, List.of(0.1535f,0.134f));
+//        param_of_bottom_aruco.put(27f, List.of(0.1535f,-0.134f));
+//        param_of_bottom_aruco.put(28f, List.of(-0.1535f,-0.134f));
+//        //-----marker lenth: 0.03m
 //        param_of_bottom_aruco.put(25f, List.of(0.15f,0.118f));
 //        param_of_bottom_aruco.put(26f, List.of(0.143f,-0.16f));
 //        param_of_bottom_aruco.put(27f, List.of(-0.0455f,-0.145f));
@@ -172,8 +172,8 @@ public class PayloadDataTransmission extends AppCompatActivity {
 //        }
         Float[] tempLocation = getReceiveLocation();
         float id = tempLocation[6];
-        tempLocation[0] = tempLocation[0] - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(0);
-        tempLocation[1] = -tempLocation[1] - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(1);
+        tempLocation[0] = tempLocation[0];// - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(0);
+        tempLocation[1] = -tempLocation[1];// - Objects.requireNonNull(param_of_bottom_aruco.get(id)).get(1);
         return tempLocation;
     }
     public Float[] getReceiveLocation(){

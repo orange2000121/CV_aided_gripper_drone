@@ -53,7 +53,7 @@ import dji.common.util.CommonCallbacks;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
-import dji.sdk.flightcontroller.Compass;
+
 import dji.sdk.flightcontroller.FlightAssistant;
 import dji.sdk.flightcontroller.FlightController;
 
@@ -246,30 +246,32 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         });
         //SetForward(50,1000);
         ForwardBtn.setOnClickListener(v -> {
-            flight_thread = new Thread(()->{
-                flightController.setVirtualStickAdvancedModeEnabled(true);
-                flight.moveTo(1,-1.5f,0);
-                SystemClock.sleep(500);
-                flight.moveTo(-1,1.5f,0);
-                flightController.setVirtualStickAdvancedModeEnabled(false);
-            });
-            flight_thread.start();
+            try {
+
+                Log.i("ForwardButton","Start to Fly");
+                flight.threadMoveTo(3,0,0,0.5f);
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Log.i("ForwardButton","Interrupted");
+                Thread.currentThread().interrupt();
+
+            }
+
         });
         BackwardsBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
                 flightController.setVirtualStickAdvancedModeEnabled(true);
-                flight.moveTo(1,-0.5f,0);
+                flight.moveTo(-0,-1.5f,0);
                 SystemClock.sleep(500);
-                flight.moveTo(-1,0.5f,0);
                 flightController.setVirtualStickAdvancedModeEnabled(false);
             });
             flight_thread.start();        });
         RightBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
                 flightController.setVirtualStickAdvancedModeEnabled(true);
-                flight.moveTo(-0.5f,-1f,0);
+                flight.moveTo(1f,-0,0);
                 SystemClock.sleep(500);
-                flight.moveTo(0.5f,1f,0);
                 flightController.setVirtualStickAdvancedModeEnabled(false);
             });
             flight_thread.start();
@@ -294,10 +296,21 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         });
 
         mBtnStart.setOnClickListener(v -> {
+
             flight_thread = new Thread(()->{
-                payload.gripperControl(true);
+                try{
+                    Thread.sleep(250);
+                 payload.gripperControl(true);}
+                catch(InterruptedException e){
+                    e.printStackTrace();
+                }
             });
             flight_thread.start();
+            Float[] asda = payload.getBottomLocation();
+            float danny= 10;
+            if(danny==10){
+                flight_thread.interrupt();
+            }
         });
 
         ArucoBtn.setOnClickListener(v -> {
