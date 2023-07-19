@@ -40,9 +40,9 @@ dji
 ```
 
 ## Environment ##
-Gradle version = 7.2
-Android plugin version = 4.2.1
-JDK = 11
-Compile SDK version = 34 (API 34)
-Build Tools Version = 30.0.2
-Java 8
+Gradle version = 7.2.
+Android plugin version = 4.2.1.
+JDK = 11.
+Compile SDK version = 34 (API 34).
+Build Tools Version = 30.0.2.
+Java 8.
