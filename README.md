@@ -1,6 +1,6 @@
 
 ## Android Studio Environment ##
-You need to change the path in this file *local.properties*  
+You need to change the path in this file: *local.properties*  
 ```
 sdk.dir=C\:\\Users\\User\\AppData\\Local\\Android\\Sdk
 ```
