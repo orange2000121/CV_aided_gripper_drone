@@ -1,6 +1,6 @@
 
 ## Android Studio Environment ##
-You need to change the path in this file: [local.properties]()  
+You need to change the user name in this file: [local.properties](https://github.com/orange2000121/CV_aided_gripper_drone/blob/yuan/ActivationAndBindingDemo/local.properties)  
 ```
 sdk.dir=C\:\\Users\\User\\AppData\\Local\\Android\\Sdk
 ```
