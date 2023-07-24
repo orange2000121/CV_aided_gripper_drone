@@ -12,6 +12,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.dji.activationDemo.ClientSocket;
 import com.dji.activationDemo.R;
 import com.dji.activationDemo.DemoApplication;
 import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
@@ -57,6 +58,7 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
         findViewById(R.id.btn_close_gripper).setOnClickListener(this);
         findViewById(R.id.btn_get_circle).setOnClickListener(this);
         findViewById(R.id.btn_stop_circle).setOnClickListener(this);
+        findViewById(R.id.btn_client).setOnClickListener(this);
         if (ModuleVerificationUtil.isPayloadAvailable()) {
             if(usePayload){
                 payload = DemoApplication.getAircraftInstance().getPayload();
@@ -179,6 +181,9 @@ public class PayloadActivity extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.btn_stop_circle:
                 dataTransmission.stopFindCircleLocation();
+                break;
+            case R.id.btn_client:
+                new ClientSocket().startConnection();
                 break;
             default:
         }

@@ -234,7 +234,7 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         mBtncameraCalib = (Button) findViewById(R.id.btn_camera_calib3);
         mBtnPayload = (Button) findViewById(R.id.btn_payload);
         mBtnPayload.setOnClickListener(this);
-        mBtnPayload.setEnabled(false);
+        mBtnPayload.setEnabled(true);
         mBtncameraCalib.setOnClickListener(this);
         mBtncameraCalib.setEnabled(false);
         mBtnnewfeeder.setOnClickListener(this);

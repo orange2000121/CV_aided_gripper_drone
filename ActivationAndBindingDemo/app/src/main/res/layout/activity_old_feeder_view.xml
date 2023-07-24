@@ -228,7 +228,7 @@
         android:layout_marginBottom="16dp"
         android:layout_weight="1"
         android:shadowColor="#B11B1B"
-        android:text="demo"
+        android:text="demo right"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_backwards" />
@@ -240,7 +240,7 @@
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="188dp"
         android:layout_weight="1"
-        android:text="Aruco"
+        android:text="demo left"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/btn_left"
         app:layout_constraintEnd_toStartOf="@+id/btn_forward" />
