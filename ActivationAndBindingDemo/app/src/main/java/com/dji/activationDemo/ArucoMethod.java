@@ -261,7 +261,7 @@ class ArucoCoordinate{
     /*
     get the median of the data in the new list
      */
-    private float newListMedian(ArrayList<Float> list, float data) {
+    private float newListMedian(ArrayList<Float> list, float data) {  // 中位數
         list.add(data);
         list.remove(0); //add and remove the data, make the new list always have 10 data
         //remove the null data

@@ -66,8 +66,8 @@ public class PayloadDataTransmission extends AppCompatActivity {
 
     private void initListener() {
         if (ModuleVerificationUtil.isPayloadAvailable()) {
-            payload = DemoApplication.getAircraftInstance().getPayload();
-            payload.setCommandDataCallback(new Payload.CommandDataCallback() {
+            payload = DemoApplication.getAircraftInstance().getPayload(); //
+            payload.setCommandDataCallback(new Payload.CommandDataCallback() { //監聽訊息
                 @Override
                 public void onGetCommandData(byte[] bytes) {
                     String temp = ViewHelper.getString(bytes);
@@ -134,7 +134,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
         if(jsonArray.size() == 0) return null;
         payloadReceiveData = "";
         for (JsonElement jsonElement : jsonArray) {
-            Float[] circle = new Float[2];
+            Float[] circle = new Float[2]; //type:array [circle_X, circle_Y]
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             if(jsonObject.get("x_coor") == null) continue;
             if(jsonObject.get("x_coor").getAsString().equals("nan")) continue;
@@ -194,7 +194,7 @@ public class PayloadDataTransmission extends AppCompatActivity {
         if(payloadReceiveData.equals("(null)")) return null;
         if(payloadReceiveData.equals("null")) return null;
         if(payloadReceiveData.equals("[]")) return null;
-        Gson gson = new Gson();
+        Gson gson = new Gson();  // 解析json to dic
         JsonArray jsonArray = gson.fromJson(payloadReceiveData, JsonArray.class);
         if (jsonArray != null) {
             if(jsonArray.size() == 0){

@@ -35,6 +35,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".yuan"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="false"
             android:screenOrientation="portrait">

@@ -46,6 +46,14 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
     private Button mBtnPayload;
     private TextView mVersionTv;
 
+
+    //Yuan
+    private Button Btn_yuan;
+
+
+    /**
+     * runtime permission
+     */
     private static final String[] REQUIRED_PERMISSION_LIST = new String[]{
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
@@ -74,6 +82,12 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         setContentView(R.layout.activity_connection);
 
         initUI();
+
+        //Yuan
+        Btn_yuan = (Button) findViewById(R.id.BtnYuanDemo);
+        Btn_yuan.setOnClickListener(this);
+        Btn_yuan.setEnabled(false);
+
 
         // Register the broadcast receiver for receiving the device connection's changes.
         IntentFilter filter = new IntentFilter();
@@ -263,6 +277,9 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             mBtncameraCalib.setEnabled(true);
             mBtnPayload.setEnabled(true);
 
+            // Yuan
+            Btn_yuan.setEnabled(true);
+
             String str = mProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
             mTextConnectionStatus.setText("Status: " + str + " connected");
 
@@ -278,6 +295,10 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             mBtncameraCalib.setEnabled(false);
             mBtnPayload.setEnabled(false);
             mBtnoldfeeder.setEnabled(false);
+
+            // Yuan
+            Btn_yuan.setEnabled(false);
+
             mTextProduct.setText(R.string.product_information);
             mTextConnectionStatus.setText(R.string.connection_loose);
         }
@@ -301,6 +322,13 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
             Intent intent = new Intent(ConnectionActivity.this, PayloadActivity.class);
             startActivity(intent);
         }
+
+        // Yuan
+        if (v.getId() == R.id.BtnYuanDemo) {
+            Intent intent = new Intent(ConnectionActivity.this, PayloadActivity.class);
+            startActivity(intent);
+        }
+
     }
 
     private void showToast(final String toastMsg) {

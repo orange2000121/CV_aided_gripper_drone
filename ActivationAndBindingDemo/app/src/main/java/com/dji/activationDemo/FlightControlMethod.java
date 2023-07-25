@@ -30,6 +30,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 
+/**
+ * throttle:上下的速度
+ *
+ */
 public class FlightControlMethod extends AppCompatActivity {
     public float roll, pitch, throttle, yaw;// control the drone flying
     public boolean emg_now = false;// emergency button
@@ -76,6 +80,10 @@ public class FlightControlMethod extends AppCompatActivity {
     /*                                main activity                               */
     /* -------------------------------------------------------------------------- */
 
+    /**
+     * @param high 鏡頭跟aruco的高度
+     * @throws InterruptedException
+     */
     public void takeBall(float high) throws InterruptedException {
         if(emg_now) return;
         switchVirtualStickMode(true);
@@ -102,6 +110,7 @@ public class FlightControlMethod extends AppCompatActivity {
 
             return;
         }
+        // 校正10次
         for(int i=0;i<10;i++){
             if (arrived==false)
                 arrived = flightAboveAruco(-0.08f,-0.02f,0.35f, 1,0.1f);
@@ -114,6 +123,10 @@ public class FlightControlMethod extends AppCompatActivity {
         moveTo(0,0,0.3f,0.35f);
     }
 
+    /**
+     * @param high
+     * @throws InterruptedException
+     */
     private void takeBallwithThread(float high) throws InterruptedException {
 
             float min_high = 0.50f, ball_high = 0.25f;
@@ -236,10 +249,11 @@ public class FlightControlMethod extends AppCompatActivity {
         float start_orientation = getOrientation();
         SystemClock.sleep(500);
         takeOff();
-        SystemClock.sleep(6000);
+        SystemClock.sleep(6000); // wait to take off
         //go to ball
 
-        moveTo(2,2,0);
+        moveTo(2,2,0); //球的位置
+
         SystemClock.sleep(500);
         takeBall(0.7f);
         moveTo(0,0,0.5f,0.35f);
@@ -257,6 +271,12 @@ public class FlightControlMethod extends AppCompatActivity {
         SystemClock.sleep(500);
         switchVirtualStickMode(false);
         landing();
+    }
+
+    // Yuan
+    public void demo4() throws InterruptedException {
+        if (emg_now) return;
+
     }
 
 
@@ -357,7 +377,17 @@ public class FlightControlMethod extends AppCompatActivity {
         landing();
         switchVirtualStickMode(false);
     }
+
+    /**
+     * @param payload_x_offset 偏移量
+     * @param payload_y_offset
+     * @param payload_z_offset
+     * @param run_time 校正次數
+     * @param speed (m/s)
+     * @return
+     */
     public boolean flightAboveAruco(float payload_x_offset, float payload_y_offset, float payload_z_offset, int run_time,float speed){
+
         if (emg_now) return false;
         int count = 0, error_count = 0;
         while (true) {
@@ -468,6 +498,11 @@ public class FlightControlMethod extends AppCompatActivity {
     }
 
 
+    /**
+     * @param init_x 理論認定圓的座標
+     * @param init_y 理論認定圓的座標
+     * @param init_z 理論認定圓的座標
+     */
     public void throughBall(float init_x, float init_y, float init_z){
         if(emg_now) return;
 //        payload.findCircleLocation();
@@ -563,9 +598,9 @@ public class FlightControlMethod extends AppCompatActivity {
             }
             if (function_times >100) return null;
             function_times++;
-            yaw = 10;// can be changed
+            yaw = 10;// can be changed 10度
             //determine the aruco is in the list
-            for(ArucoCoordinate arucoCoordinate : arucoCoordinateList){
+            for(ArucoCoordinate arucoCoordinate : arucoCoordinateList){  // arucoCoordinateList很多aruco
                 if(arucoCoordinate.id == aruco_id){
                     setZero();
                     return arucoCoordinate;
@@ -901,6 +936,11 @@ public class FlightControlMethod extends AppCompatActivity {
         SystemClock.sleep((long) time * 1000);
         setZero();
     }
+
+    /**
+     * @param enable
+     * 手機跟遙控器切換 true:手機, false:遙控器
+     */
     public void switchVirtualStickMode(boolean enable){
         flightController.setVirtualStickModeEnabled(enable, djiError -> {
             flightController.setVirtualStickAdvancedModeEnabled(true);
@@ -911,6 +951,10 @@ public class FlightControlMethod extends AppCompatActivity {
             }
         });
     }
+
+    /**
+     * @return 東南西北的角度
+     */
     public float getOrientation(){
         return flightController.getCompass().getHeading();
     }

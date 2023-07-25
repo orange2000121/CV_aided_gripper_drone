@@ -18,7 +18,9 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.TextureView;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -66,13 +68,13 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 //--------Flight Controller
     private FlightController flightController= null;
     private FlightAssistant flightAssistant = null;
-    private Button TurnOnMotorsBtn,TurnOffMotorsBtn, TakeOffBtn, LandBtn,DisableVirtualStick,EnableVirtualStick;
-    private Button EmergencyBtn,ForwardBtn, YawBtn,BackwardsBtn, RightBtn ,LeftBtn,UpBtn, DownBtn;
+    private Button TurnOnMotorsBtn,TurnOffMotorsBtn, TakeOffBtn, LandBtn;
+    private Button EmergencyBtn, ForwardBtn, YawBtn,BackwardsBtn, RightBtn ,LeftBtn,UpBtn, DownBtn;
     private Button mBtnStart,ArucoBtn, MoveTo;
-    private OnScreenJoystick screenJoystickRight,screenJoystickLeft;
     private Timer mSendVirtualStickDataTimer;
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
     private final FlightControlMethod flight = new FlightControlMethod();
+    private Switch SwitchVirtualStick;
     Thread flight_thread = null;
 
 //--------Camera
@@ -276,6 +278,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             });
             flight_thread.start();
         });
+
         LeftBtn.setOnClickListener(v -> {
             flight.moveTo(-1,0,0);
         });
@@ -283,6 +286,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             showToast("Up");
             flight.moveTo(0,0,1f);
         });
+
         DownBtn.setOnClickListener(v -> {
             flight_thread = new Thread(()->{
                 flight.switchVirtualStickMode(true);
@@ -322,27 +326,28 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
 
         MoveTo.setOnClickListener(v -> {
             flight_thread = new Thread(() -> {
-                flight.demo3();
+                try {
+                    flight.demo3();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             });
             flight_thread.start();
         });
 
-        EnableVirtualStick.setOnClickListener(v -> flightController.setVirtualStickModeEnabled(true, djiError -> {
-            flightController.setVirtualStickAdvancedModeEnabled(true);
-            if (djiError != null) {
-                ToastUtils.setResultToToast(djiError.getDescription());
-            } else {
-                showToast("VS Enabled");
+        SwitchVirtualStick.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    flight.switchVirtualStickMode(true);
+                }
+                else {
+                    flight.switchVirtualStickMode(false);
+                }
             }
-        }));
-        DisableVirtualStick.setOnClickListener(v -> flightController.setVirtualStickModeEnabled(false, djiError -> {
-            flightController.setVirtualStickAdvancedModeEnabled(true);
-            if (djiError != null) {
-                ToastUtils.setResultToToast(djiError.getDescription());
-            } else {
-//                showToast("VS Disabled");
-            }
-        }));
+        });
+
+
         TurnOnMotorsBtn.setOnClickListener(v -> flight.flightController.turnOnMotors(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
@@ -364,65 +369,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
                 }
             }
         }));
-        //todo: remove joystick right and left
-        //todo: move the mSendVirtualStickDataTimer to the flight class
-        screenJoystickRight.setJoystickListener((joystick, pX, pY) -> {
-            if(Math.abs(pX) < 0.02 ){
-                pX = 0;
-            }
-            if(Math.abs(pY) < 0.02 ){
-                pY = 0;
-            }
-            float pitchJoyControlMaxSpeed = 10;
-            float rollJoyControlMaxSpeed = 10;
-
-            pitch = (float)(pitchJoyControlMaxSpeed * pX);
-            roll = (float)(rollJoyControlMaxSpeed * pY);
-
-            TextView theTextView21  = (TextView) findViewById(R.id.textView4);
-            TextView theTextView22  = (TextView) findViewById(R.id.textView5);
-            theTextView21.setText(" L/R = " + String.format("%.2f",pitch));
-            theTextView21.setTextColor(Color.RED);
-            theTextView22.setText(" F/B = " + String.format("%.2f",roll));
-            theTextView22.setTextColor(Color.RED);
-
-            if (null == mSendVirtualStickDataTimer) {
-                mSendVirtualStickDataTask = new SendVirtualStickDataTask();
-                mSendVirtualStickDataTimer = new Timer();
-                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 100, 200);
-            }
-        });
-
-        screenJoystickLeft.setJoystickListener(new OnScreenJoystickListener() {
-            @Override
-            public void onTouch(OnScreenJoystick joystick, float pX, float pY) {
-                if(Math.abs(pX) < 0.02 ){
-                    pX = 0;
-                }
-                if(Math.abs(pY) < 0.02 ){
-                    pY = 0;
-                }
-                float verticalJoyControlMaxSpeed = 2;
-                float yawJoyControlMaxSpeed = 30;
-
-                yaw = (float)(yawJoyControlMaxSpeed * pX);
-                throttle = (float)(verticalJoyControlMaxSpeed * pY);
-
-                TextView theTextView7  = (TextView) findViewById(R.id.textView7);
-                TextView theTextView6  = (TextView) findViewById(R.id.textView6);
-//
-//                theTextView7.setText(" Yaw = " + String.format("%.2f",yaw));
-//                theTextView7.setTextColor(Color.RED);
-                theTextView6.setText(" U/D = " + String.format("%.2f",throttle));
-                theTextView6.setTextColor(Color.RED);
-
-                if (null == mSendVirtualStickDataTimer) {
-                    mSendVirtualStickDataTimer = new Timer();
-                    mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 0, 200);
-                }
-            }
-        });
-
     }
 
     public void saveImageToExternalStorage(Bitmap finalBitmap) {
@@ -483,10 +429,8 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         ArucoBtn = findViewById(R.id.btn_aruco);
         mBtnStart = findViewById(R.id.btn_startPos);
 
-        EnableVirtualStick = findViewById(R.id.btn_enable_virtual_stick);
-        DisableVirtualStick = findViewById(R.id.btn_disable_virtual_stick);
-        screenJoystickRight = (OnScreenJoystick)findViewById(R.id.directionJoystickRight);
-        screenJoystickLeft = (OnScreenJoystick)findViewById(R.id.directionJoystickLeft);
+        SwitchVirtualStick = findViewById(R.id.SwitchVirtualStick);
+
         TurnOnMotorsBtn = findViewById(R.id.btn_turn_on_motors);
         TurnOffMotorsBtn = findViewById(R.id.btn_turn_off_motors);
 
@@ -536,7 +480,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         if(mVideoTexture == null) {
             Log.e(TAG, "mVideoSurface is null");
         }
-        DisableVirtualStick.performClick();
     }
 
     @Override
@@ -731,8 +674,6 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             mSendVirtualStickDataTimer = null;
         }
         setZero();
-        DisableVirtualStick.performClick();
         super.onDestroy();
-
     }
 }
