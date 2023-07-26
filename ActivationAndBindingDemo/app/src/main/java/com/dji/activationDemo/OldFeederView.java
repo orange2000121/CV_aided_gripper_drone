@@ -150,7 +150,7 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
         }
         flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
         flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-        flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
+        flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);    // degrees/second
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
 
         // set Obstacle Avoidance
@@ -628,6 +628,10 @@ public class OldFeederView extends AppCompatActivity implements TextureView.Surf
             }
         });
     }
+
+    /**
+     * send "pitch, roll, throttle, yaw" to drone
+     */
     //todo: move SendVirtualStickDataTask to the flight class
     private class SendVirtualStickDataTask extends TimerTask {
         @Override

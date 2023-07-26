@@ -250,8 +250,8 @@ public class FlightControlMethod extends AppCompatActivity {
         SystemClock.sleep(500);
         takeOff();
         SystemClock.sleep(6000); // wait to take off
-        //go to ball
 
+        //go to ball
         moveTo(2,2,0); //球的位置
 
         SystemClock.sleep(500);
@@ -273,9 +273,43 @@ public class FlightControlMethod extends AppCompatActivity {
         landing();
     }
 
+    /**
+     * @throws InterruptedException
+     * todo:繞圓柱軌跡向上運動
+     */
     // Yuan
     public void demo4() throws InterruptedException {
         if (emg_now) return;
+        switchVirtualStickMode(true);
+
+        float start_orientation = getOrientation();
+        String start_orientation_str = Float.toString(start_orientation);
+        SystemClock.sleep(500);
+        Log.d("Yuan", "Orientation" + start_orientation_str);
+
+        takeOff();
+        SystemClock.sleep(6000);    // wait to take off
+
+        // 繞圓柱軌跡向上運動
+        double CYLINDER_RADIUS = 5.0;   // meter
+        double CYLINDER_HEIGHT = 10.0;  // meter
+        double Horizontal_SPEED = 0.5;     // (m/s)
+        double Vertival_SPEED = 0.2;       // (m/s)
+
+        double Vx, Vy;
+        double dt = 0.0;
+        double CYLINDER_Circumference = 2 * CYLINDER_RADIUS * Math.PI;
+        double Circle_time = CYLINDER_Circumference / Horizontal_SPEED;
+        double Angular_velocity = (2 * Math.PI) / Circle_time;   // (rad/s)
+
+        // 計算x, y的速度分量 (Vx, Vy)
+
+        Vx = -CYLINDER_RADIUS * Angular_velocity * Math.sin(Angular_velocity) * dt;
+        Vy = CYLINDER_RADIUS * Angular_velocity * Math.cos(Angular_velocity) * dt;
+
+        double time = CYLINDER_HEIGHT / Vertival_SPEED; // (second)
+
+
 
     }
 
@@ -747,6 +781,7 @@ public class FlightControlMethod extends AppCompatActivity {
     }
     public void moveTo(float right_left_gap, float front_back_gap, float up_down_gap, float max_speed, boolean no_stop) {
         if(emg_now) return;
+
         if(max_speed > 1) {
             Log.e(TAG, "moveTo: max_speed is too large");
             runOnUiThread(new Runnable() {
@@ -757,26 +792,37 @@ public class FlightControlMethod extends AppCompatActivity {
             });
             return;
         };
+
+        // Calculate the distance between two points (x1, y1, z1) and (x2, y2, z2)
         float distance = (float) sqrt(right_left_gap * right_left_gap + front_back_gap * front_back_gap + up_down_gap * up_down_gap);
-        float higher_distance = (float) max(abs(right_left_gap),max(abs(front_back_gap), abs(up_down_gap)) );
-        // if the distance is less than 1 meter, make the max speed smaller
+
+        // Find the most longest distance in 3-Axis (x, y, z)
+        float higher_distance = (float) max(abs(right_left_gap), max(abs(front_back_gap), abs(up_down_gap)) );
+
+        // If the distance is less than 1 meter, make the max-speed smaller
         if (higher_distance < 1 && max_speed > 0.5f) {
             max_speed *= 0.5f;
         }
+
+        // todo:I need to figure out By Yuan
         roll = (float) front_back_gap / distance * max_speed;
         throttle = (float) up_down_gap / distance * max_speed;
         pitch = (float) right_left_gap / distance * max_speed;
+
         double flying_time = distance / sqrt(roll * roll + pitch * pitch + throttle * throttle);
+
         Log.i(TAG, "roll: " + roll);
         Log.i(TAG, "pitch: " + pitch);
         Log.i(TAG, "throttle: " + throttle);
         Log.i(TAG, "flying_time: " + flying_time);
-        if (distance > 5) {// if the distance is too long, don't move
+
+        // if the distance is too long, don't move
+        if (distance > 5) {
             setZero();
         } else {
             SystemClock.sleep((long) (flying_time * 1000));// when the drone is moving, wait for the drone to move
                 if(!no_stop) setZero();
-                }
+        }
 
     }
 
@@ -839,6 +885,7 @@ public class FlightControlMethod extends AppCompatActivity {
 //                Log.i("Fly_Thread","Is Alive? "+Thread.currentThread().isAlive());
             }
         }catch (InterruptedException exception) {
+                setZero();
                 setZero();
                 exception.printStackTrace();
 //                long endint = System.currentTimeMillis();
