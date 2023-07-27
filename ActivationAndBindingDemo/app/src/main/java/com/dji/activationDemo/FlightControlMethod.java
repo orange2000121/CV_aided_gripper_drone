@@ -290,24 +290,62 @@ public class FlightControlMethod extends AppCompatActivity {
         takeOff();
         SystemClock.sleep(6000);    // wait to take off
 
-        // 繞圓柱軌跡向上運動
-        double CYLINDER_RADIUS = 5.0;   // meter
-        double CYLINDER_HEIGHT = 10.0;  // meter
-        double Horizontal_SPEED = 0.5;     // (m/s)
-        double Vertival_SPEED = 0.2;       // (m/s)
+        /*--------三角形--------*/
+        double speed = 5;
+        pitch = (float) (speed * Math.cos((double) 120.0));
+        roll = (float) (speed * Math.sin((double) 120.0));
+        SystemClock.sleep((long) (4 * 1000));    // sleep (ms)
 
-        double Vx, Vy;
-        double dt = 0.0;
-        double CYLINDER_Circumference = 2 * CYLINDER_RADIUS * Math.PI;
-        double Circle_time = CYLINDER_Circumference / Horizontal_SPEED;
-        double Angular_velocity = (2 * Math.PI) / Circle_time;   // (rad/s)
+        pitch = (float) (speed * Math.cos((double) 240.0));
+        roll = (float) (speed * Math.sin((double) 240.0));
+        SystemClock.sleep((long) (4 * 1000));    // sleep (ms)
 
-        // 計算x, y的速度分量 (Vx, Vy)
+        pitch = (float) (speed * Math.cos((double) 60.0));
+        roll = (float) (speed * Math.sin((double) 60.0));
+        SystemClock.sleep((long) (4 * 1000));    // sleep (ms)
 
-        Vx = -CYLINDER_RADIUS * Angular_velocity * Math.sin(Angular_velocity) * dt;
-        Vy = CYLINDER_RADIUS * Angular_velocity * Math.cos(Angular_velocity) * dt;
 
-        double time = CYLINDER_HEIGHT / Vertival_SPEED; // (second)
+
+//        /*--------繞圓柱軌跡向上運動--------*/
+//
+//        // 常量
+//        double CYLINDER_RADIUS = 100.0;   // 圓柱半徑 (meter)
+//        double CYLINDER_HEIGHT = 10.0;  // 圓柱高度 (meter)
+//        double Horizontal_SPEED = 1;  // 繞圓速率 (m/s)
+//        double Vertival_SPEED = 0.1;    // 上升速度 (m/s)
+//        double Time_Step = 0.5;         // 每個動作的間隔時間 (second)
+//
+//        double Vx = 0.0, Vy = 0.0;      // x, y的速度分量
+//        double Start_Time = 0.0;        // 開始時間
+//
+//        double CYLINDER_Circumference = 2 * CYLINDER_RADIUS * Math.PI;  // 圓柱周長
+//        double Circle_time = CYLINDER_Circumference / Horizontal_SPEED; // 繞圓一圈的時間
+//        double Angular_velocity = 2 * Math.PI / Circle_time;   // (rad/s)
+//
+//        while (Start_Time <= Circle_time) {
+//
+//            // 計算x, y的速度分量 (Vx, Vy)
+//            Vx = Horizontal_SPEED * Math.cos(Angular_velocity * Start_Time * 180 / Math.PI);
+//            Vy = Horizontal_SPEED * Math.sin(Angular_velocity * Start_Time * 180 / Math.PI);
+//
+//            roll = (float) Vx;
+//            pitch = (float) Vy;
+//            throttle = (float) Vertival_SPEED;
+//
+//            Log.i("Yuan", "Vx:" + Vx + "Vy:" + Vy);
+//
+//            Start_Time = Start_Time + Time_Step;
+//            SystemClock.sleep((long) (Time_Step * 1000));    // sleep (ms)
+//            setZero();
+//        }
+
+        setZero();
+        SystemClock.sleep(500);
+        landing();
+
+
+
+//         double time = CYLINDER_HEIGHT / Vertival_SPEED; // (second)
 
 
 
